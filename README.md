@@ -6,3 +6,9 @@ An AI chatbot that aims to behave like a real person as convincingly as possible
 - hava distinct personality
 - hava a clear identity
 - remember past statements and information received
+
+## Improvements to 1.0
+- use more complex model as a base
+- finetune using LoRA
+- improve training data and training process
+- use RAG to access long term memory
