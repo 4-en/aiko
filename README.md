@@ -12,3 +12,5 @@ An AI chatbot that aims to behave like a real person as convincingly as possible
 - finetune using LoRA
 - improve training data and training process
 - use RAG to access long term memory
+- use text to speech for audio output
+- add inputs for audio/video
