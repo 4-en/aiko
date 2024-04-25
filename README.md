@@ -14,3 +14,4 @@ An AI chatbot that aims to behave like a real person as convincingly as possible
 - use RAG to access long term memory
 - use text to speech for audio output
 - add inputs for audio/video
+- run using fastapi for better integration 
