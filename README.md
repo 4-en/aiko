@@ -20,10 +20,10 @@ An AI chatbot that aims to behave like a real person as convincingly as possible
 - run using fastapi for better integration 
 
 ## Progress
-[ ] create basic api to reply to messages
-[ ] integrate api into discord
-[ ] use openai api for replies (no finetuning)
-[ ] finetune openai model
-[ ] integrate web ui
-[ ] integrate RAG
-[ ] train and use local LLM
+- [ ] create basic api to reply to messages
+- [ ] integrate api into discord
+- [ ] use openai api for replies (no finetuning)
+- [ ] finetune openai model
+- [ ] integrate web ui
+- [ ] integrate RAG
+- [ ] train and use local LLM
