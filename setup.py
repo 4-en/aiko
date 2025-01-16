@@ -10,8 +10,8 @@ deps = [
 setup(
     name="Aiko2",
     version="0.2.0",
-    packages=find_packages("src"),
-    package_dir={"": "src"},
+    packages=find_packages("."),
+    package_dir={"": "."},
     install_requires=deps,
     entry_points={
         'console_scripts': [
