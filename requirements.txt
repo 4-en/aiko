@@ -1,3 +1,0 @@
-flashrag-dev --pre
-faiss-cpu
-sentence-transformers
