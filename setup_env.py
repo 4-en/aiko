@@ -2,7 +2,10 @@ import os
 
 # Define environment file locations and the API keys they should store
 CONFIG = {
-    "aiko2/tests/.env": ["OPENAI_API_KEY"],
+    "aiko2/tests/.env": [
+        "OPENAI_API_KEY",
+        "GEMINI_API_KEY",
+        ],
 }
 
 GITIGNORE_FILE_PATH = os.path.join(os.path.dirname(__file__), ".gitignore")
@@ -18,6 +21,17 @@ def add_to_gitignore():
             for env_file in CONFIG.keys():
                 if f"{env_file}\n" not in lines:
                     f.write(f"\n{env_file}\n")
+                    
+def find_existing_key(key_name, env_files):
+    for env_file in env_files:
+        try:
+            with open(env_file, "r") as f:
+                for line in f:
+                    if line.startswith(key_name):
+                        return line.split("=")[1].strip()
+        except Exception:
+            continue
+    return None
 
 def create_env_files():
     """Prompts the user for API keys and creates .env files in multiple locations."""
@@ -28,12 +42,22 @@ def create_env_files():
         for key_name in key_names:
             different_key_names.add(key_name)
 
-    keys = {key_name: None for key_name in different_key_names}
+    keys = {key_name: find_existing_key(key_name, CONFIG.keys()) for key_name in different_key_names}
 
     # Prompt the user for API keys
     for key_name in different_key_names:
+        
+        key = keys[key_name]
+        value = None
+        if key:
+            value = input(f"Enter new value for {key_name} (or press Enter to keep): ").strip()
+            if not value:
+                continue
+        else:
+            value = input(f"Enter value for {key_name}: ").strip()
+            if not value:
+                raise ValueError(f"Key {key_name} is missing.") 
 
-        value = input(f"Enter value for {key_name}: ").strip()
         keys[key_name] = value
 
     # Create .env files
