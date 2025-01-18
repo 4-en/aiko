@@ -1,7 +1,6 @@
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from flashrag.retriever import BaseRetriever
 
 # Load Sentence Transformer Model for embeddings
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -14,8 +13,8 @@ dimension = model.get_sentence_embedding_dimension()
 index = faiss.IndexHNSWFlat(dimension, 32)  # HNSW for efficient nearest neighbor search
 
 
-class FlashRAGRetriever(BaseRetriever):
-    """Custom retriever for FlashRAG with FAISS"""
+class Retriever:
+    """Custom retriever with FAISS"""
     
     def __init__(self, index, knowledge_base, model):
         self.index = index
@@ -43,7 +42,7 @@ class FlashRAGRetriever(BaseRetriever):
 
 
 # Initialize the Retriever
-retriever = FlashRAGRetriever(index, documents, model)
+retriever = Retriever(index, documents, model)
 
 # Add Initial Knowledge
 initial_docs = [
