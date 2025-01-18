@@ -1,5 +1,64 @@
-# Aiko 2.0
-An AI chatbot that aims to behave like a real person as convincingly as possible.
+# Aiko 2.0 - Adaptive Intelligent Knowledge Orchestrator ✨
+
+## Overview
+
+Aiko is a lightweight, modular Retrieval-Augmented Generation (RAG) framework designed to create personalized AI chat assistants. It is optimized to run efficiently on low-end hardware, such as the Raspberry Pi 5, while leveraging external APIs (e.g., OpenAI, Gemini) when needed.
+
+With support for custom knowledge bases, FAISS retrieval, web search, and user-specific memory, Aiko provides a robust yet accessible AI assistant experience. Future plans include API and Discord integrations.
+
+## 🌟 Features
+
+Personalized AI Assistants – Custom memory for each user and AI character.
+
+Efficient RAG Pipelines – Optimized for resource-constrained hardware.
+
+Hybrid Retrieval – Use FAISS for local retrieval and web search for external data.
+
+API Integration – Seamlessly connect with OpenAI, Gemini, and other services.
+
+Modular Design – Easily extend with new retrieval and generation methods.
+
+Multi-Platform Support – Designed for Raspberry Pi 5 but runs on any Linux/Windows system.
+
+Discord Bot (Planned) – Bring Aiko-powered AI to Discord communities.
+
+## 📂 Project Structure
+```
+aiko/
+│── api/             # API integration (OpenAI, Gemini, etc.)
+│── config/          # Configuration files and settings
+│── discord/         # Discord bot integration (planned)
+│── generator/       # Text generation logic (LLMs, APIs)
+│── pipeline/        # Core RAG pipeline (retrieval + generation)
+│── refiner/         # Post-processing and response refinement
+│── retriever/       # FAISS, web search, and hybrid retrieval
+│── tests/           # Unit tests and validation
+│── utils/           # Helper functions and utilities
+│── core/            # Core data structures (Message, Conversation, User)
+│── __main__.py      # Main entry point
+│── README.md        # This file
+```
+## 🚀 Installation & Setup
+
+### Prerequisites
+
+Python 3.11
+
+pip
+
+FAISS for local retrieval (optional but recommended)
+
+API Keys for external LLMs (if using OpenAI/Gemini)
+
+TODO: complete setup and examples
+
+## 🛠 Roadmap
+
+- Implement FAISS-based local retrieval 🛠
+- Web search integration 🛠
+- Persistent memory for users & characters 🛠
+- Discord bot integration 🛠
+- API for external applications 🛠
 
 ## Key Goals
 - have realistic conversations using web interface or chat program
