@@ -169,8 +169,16 @@ class Pipeline(BasePipeline):
         max_tokens = self.config.max_input_length
         cut_off_window = self.config.cut_off_window
 
-        if total_tokens <= max_tokens:
+        if total_tokens <= max_tokens or max_tokens <= 0:
             return conversation
+        
+
+        # some checks to avoid annoying debugging
+        if max_tokens < cut_off_window:
+            raise ValueError("cut_off_window must be less than or equal to max_input_length")
+        
+        if max_tokens < 128:
+            raise ValueError("max_input_length must be at least 128 tokens")
         
         target_tokens = max_tokens - cut_off_window
 
