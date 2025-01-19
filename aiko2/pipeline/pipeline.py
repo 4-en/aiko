@@ -126,3 +126,58 @@ class Pipeline(BasePipeline):
         # TODO: Implement this method
 
         return conversation
+    
+    def _limit_input_length(self, conversation: Conversation) -> Conversation:
+        """
+        Limit the input length of the conversation.
+        To limit api/computing costs, we limit the input length of the conversation.
+        To take advantage of caching (specifically for the OpenAI API), we will try to
+        keep the beginning of the sequence as consistent as possible.
+
+        For example, if the limit is 4096 tokens, we will not cut off at the exact token, but rather
+        cut off a fixed number of tokens from the start of the conversation once the limit is reached.
+        This allows us to keep the beginning of the conversation consistent between multiple requests,
+        even if the end of the conversation changes every time.
+
+        Another option would be to use message ids to keep track of the last message that was included
+        and cache last conversations sent to the API.
+        
+        Example:
+        Limit: 10 tokens
+        - Seq 1: "A B C D E F G" (Fine, 7 tokens)
+        - Seq 2: "A B C D E F G H I J (Fine, 10 tokens)
+        - Seq 3: "A B C D E F G H I J K L" (Limit reached, cut off 5 tokens (until <= 10 tokens)) -> "F G H I J K L"
+        - Seq 4: "A B C D E F G H I J K L M N" (Limit reached, cut off 5 tokens (until <= 10 tokens)) -> "F G H I J K L M N"
+        The start of sequence 3 and 4 is consistent, while the end changes. The "F G H I J K L" can be cached
+        and reduce cost when sending the next request.
+
+        Note: This only works if the request contains the full conversation history withouth manually
+        shortening it. If the conversation is manually shortened, this method will not work as intended.
+
+        Parameters
+        ----------
+        conversation : Conversation
+            The conversation to limit the input length of.
+
+        Returns
+        -------
+        Conversation
+            The conversation with the input length limited.
+        """
+
+        total_tokens = conversation.estimate_tokens()
+        max_tokens = self.config.max_input_length
+        cut_off_window = self.config.cut_off_window
+
+        if total_tokens <= max_tokens:
+            return conversation
+        
+        target_tokens = max_tokens - cut_off_window
+
+        # cut off messages from beginning until total tokens <= target tokens
+        while total_tokens > target_tokens:
+            # remove first message
+            message = conversation.messages.pop(0)
+            total_tokens -= message.estimate_tokens()
+
+        return conversation

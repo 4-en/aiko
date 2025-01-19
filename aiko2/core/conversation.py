@@ -62,3 +62,14 @@ class Conversation:
             return self.messages
         
         return self.messages[-n:]
+    
+    def estimate_tokens(self):
+        """
+        Estimate the number of tokens in the conversation.
+        
+        Returns
+        -------
+        int
+            The estimated number of tokens in the conversation.
+        """
+        return sum([message.estimate_tokens() for message in self.messages])
