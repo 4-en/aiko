@@ -86,3 +86,8 @@ TODO: complete setup and examples
 - [ ] integrate web ui
 - [ ] integrate RAG
 - [ ] train and use local LLM
+
+## Unlikely
+- GUI with Qt
+- Desktop companion
+- android app
