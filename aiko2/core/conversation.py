@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from .message import Message
+from uuid import uuid4
 
 
 @dataclass
@@ -11,10 +12,19 @@ class Conversation:
     ----------
     messages : list
         The list of messages in the conversation.
+    id : str
+        The conversation id.
     """
     
     # The list of messages in the conversation.
     messages: list[Message] = field(default_factory=list)
+
+    # The conversation id.
+    id: str = None
+
+    def __post_init__(self):
+        if not self.id:
+            self.id = str(uuid4())
 
     def add_message(self, message: Message):
         """

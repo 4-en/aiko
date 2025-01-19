@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from .user import User
 from time import time
+from uuid import uuid4
+from aiko2.utils import estimate_tokens
 
 @dataclass
 class Message:
@@ -11,10 +13,12 @@ class Message:
     ----------
     content : str
         The message content.
-    timestamp : str
-        The timestamp of the message.
     user : User
         The user who sent the message.
+    timestamp : str
+        The timestamp of the message.
+    id : str
+        The message id.
     """
 
     # The message content.
@@ -26,6 +30,9 @@ class Message:
     # The timestamp of the message.
     timestamp: str = None
 
+    # The message id.
+    id: str = None
+
 
     def __post_init__(self):
         """
@@ -36,6 +43,9 @@ class Message:
 
         if self.user is None:
             self.user = User("Unknown", "USER", "-1")
+
+        if self.id is None:
+            self.id = str(uuid4())
 
 
     def __str__(self) -> str:
@@ -59,4 +69,15 @@ class Message:
             The string representation of the message.
         """
         return f"{self.user.name}: {self.content}"
+    
+    def estimate_tokens(self) -> int:
+        """
+        Estimate the number of tokens in the message content.
+
+        Returns
+        -------
+        int
+            The estimated number of tokens in the message content.
+        """
+        return estimate_tokens(f"<{self.user.name}> {self.content}")
 

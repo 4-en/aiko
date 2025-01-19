@@ -10,11 +10,10 @@ class User:
     ----------
     name : str
         The user's name.
-    id : str
-        The user's id.
     role : str
         The user's role.
-        Usually one of: 'user', 'assistant', 'system'
+    id : str
+        The user's id.
     """
 
     # The user's name.
