@@ -91,3 +91,4 @@ TODO: complete setup and examples
 - GUI with Qt
 - Desktop companion
 - android app
+- GUI RAG pipeline builder
