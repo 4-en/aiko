@@ -1,5 +1,20 @@
 from dataclasses import dataclass
 from uuid import uuid4
+from enum import Enum
+
+class Role(Enum):
+    """
+    A collection of roles available for use.
+
+    Parameters
+    ----------
+    Enum : str
+        The role used by the system.
+    """
+    
+    USER = "USER"
+    ASSISTANT = "ASSISTANT"
+    SYSTEM = "SYSTEM"
 
 @dataclass
 class User:
@@ -20,7 +35,7 @@ class User:
     name: str
 
     # The user's role
-    role: str = "USER"
+    role: Role = Role.USER
 
     # The user's id
     id: str = None
@@ -32,7 +47,7 @@ class User:
         if not self.id:
             self.id = str(uuid4())
         if not self.role:
-            self.role = "USER"
+            self.role = Role.USER
 
     def __str__(self) -> str:
         """
