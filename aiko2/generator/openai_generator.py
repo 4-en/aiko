@@ -162,6 +162,28 @@ class OpenAIGenerator(BaseGenerator):
             return f"Error: {str(e)}"
         
                 
-        
+class GPT4OGenerator(OpenAIGenerator):
+    """
+    A generator that uses the GPT-4o model from OpenAI to generate responses.
+    """
+    
+    def __init__(self):
+        super().__init__(model=OpenAIModel.GPT4O)
+
+class GPT4OMiniGenerator(OpenAIGenerator):
+    """
+    A generator that uses the GPT-4o-mini model from OpenAI to generate responses.
+    """
+    
+    def __init__(self):
+        super().__init__(model=OpenAIModel.GPT4O_MINI)
+
+class GPTO1Generator(OpenAIGenerator):
+    """
+    A generator that uses the GPT-o1 model from OpenAI to generate responses.
+    """
+    
+    def __init__(self):
+        super().__init__(model=OpenAIModel.GPTO1)
         
     
