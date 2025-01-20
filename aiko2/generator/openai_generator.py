@@ -81,7 +81,7 @@ class OpenAIGenerator(BaseGenerator):
             api_key=API_KEY
         )
         
-    def convert_conversation_to_input(conversation: Conversation) -> list[dict]:
+    def convert_conversation_to_input(self, conversation: Conversation) -> list[dict]:
         """
         Convert a conversation to an input string for the generator.
         
@@ -152,7 +152,7 @@ class OpenAIGenerator(BaseGenerator):
         try:
             response = self.client.chat.completions.create(
                 model=self.model.value,
-                messages=OpenAIGenerator.convert_conversation_to_input(conversation),
+                messages=self.convert_conversation_to_input(conversation),
                 temperature=self.config.temperature,
                 max_completion_tokens=self.config.max_generated_tokens
             )

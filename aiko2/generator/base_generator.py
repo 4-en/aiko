@@ -38,7 +38,7 @@ class BaseGenerator(ABC):
         pass
     
     @abstractmethod
-    def convert_conversation_to_input(conversation:Conversation) -> any:
+    def convert_conversation_to_input(self, conversation:Conversation) -> any:
         """
         Convert a conversation to an input string for the generator.
 
@@ -81,7 +81,7 @@ class TestGenerator(BaseGenerator):
     def generate(self, conversation:Conversation) -> Message:
         return Message("Hello!", self.assistant)
     
-    def convert_conversation_to_input(conversation:Conversation) -> str:
+    def convert_conversation_to_input(self, conversation:Conversation) -> str:
         return "Hello!"
     
     def convert_output_to_message(self, output:str) -> Message:
