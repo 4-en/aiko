@@ -1,5 +1,5 @@
 from .base_pipeline import BasePipeline
-from aiko2.core import Conversation, Message, User
+from aiko2.core import Conversation, Message, User, Role
 from aiko2.config import Config
 
 from aiko2.evaluator import BaseEvaluator
@@ -69,6 +69,28 @@ class Pipeline(BasePipeline):
         self.retriever: BaseRetriever = retriever
         self.refiner: BaseRefiner = refiner
         self.config: Config = config or Config()
+        
+        # Setup the generator
+        self.generator._setup(self.config)
+        self._system_message = self._generate_system_message()
+        
+    def _generate_system_message(self) -> Message:
+        """
+        Generates a system message as instruction for the model.
+        This message is inserted as the first message of a conversation.
+
+        Returns
+        -------
+        Message
+            The system message.
+        """
+        
+        instruction = self.config.instructions
+        if not instruction:
+            instruction = "You are a helpful AI assistant. Please provide useful information to the user."
+        
+        return Message(instruction, User("System", Role.SYSTEM))
+        
 
     def generate(self, conversation: Conversation) -> Message | None:
         """
@@ -99,6 +121,10 @@ class Pipeline(BasePipeline):
             retrieved_info = self.retriever.retrieve(queries)
             if len(retrieved_info) > 0:
                 self._append_retrieval_results(conversation, retrieved_info)
+        
+        # insert the system message as the first message
+        conversation.messages.insert(0, self._system_message)
+        
         
         # Generate response
         response = self.generator.generate(conversation)
