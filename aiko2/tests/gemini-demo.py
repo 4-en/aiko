@@ -2,6 +2,8 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 
+# https://ai.google.dev/gemini-api/docs/code-execution?lang=python
+
 # Load environment variables from the correct .env file
 load_dotenv(".env")
 
