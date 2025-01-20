@@ -16,7 +16,10 @@ class Config:
     """
     
     # The name of the assistant.
-    name: str = "Assistant"
+    name: str = "Aiko"
+    
+    # id of the assistant
+    id: str = "aiko"
     
     # The description of the assistant.
     description: str = "An AI assistant."
@@ -25,7 +28,7 @@ class Config:
     version: str = "1.0"
 
     # The system instructions for the assistant.
-    instructions: str = "You are an AI assistant. You are to assist users in their tasks. Be polite and helpful."
+    instructions: str = "You are a helpful AI assistant. Please provide useful information to the user."
 
     # Maximum number of input characters.
     max_input_length: int = 4096
@@ -38,5 +41,11 @@ class Config:
 
     # where to log the conversations
     log_dir: str = "logs"
+    
+    # llm configs
+    max_generated_tokens: int = 256
+    temperature: float = 0.7
+    top_k: int = 50
+    top_p: float = 0.9
 
     
