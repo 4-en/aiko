@@ -2,6 +2,9 @@ from aiko2.pipeline import Pipeline
 from aiko2.core import Conversation, Message, User, Role
 from aiko2.generator import TestGenerator, OpenAIGenerator, GeminiGenerator, Gemini15Flash8B
 from aiko2.evaluator import Gemini15Flash8BEvaluator
+from aiko2.config import AikoConfig
+
+from dotenv import load_dotenv
 
 
 class CLI:
@@ -9,7 +12,11 @@ class CLI:
     Basic command line interface to rest RAG functions.
     """
     def run():
-        pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator())
+
+        # Load environment variables
+        load_dotenv()
+
+        pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator(), config=AikoConfig())
 
         print("Welcome to AIKO2!")
         print("Type 'exit' to exit the program.")

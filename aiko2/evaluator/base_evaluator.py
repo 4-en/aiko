@@ -166,8 +166,25 @@ class BaseEvaluator():
         
         output_string = output_message.content
         
-        if output_string.startswith("```json"):	
-            output_string = output_string[7:-4]
+        # try to unscuff the json
+        if not output_string.startswith("{") or not output_string.startswith("["):
+            # sometimes the output is not valid JSON, so we need to fix it
+            # try to find the first '{' or '[' and remove everything before it
+            first_square_bracket = output_string.find("[")
+            first_curly_bracket = output_string.find("{")
+            if first_square_bracket > -1 and first_square_bracket < first_curly_bracket:
+                # find ending bracket
+                ending_bracket = output_string.rfind("]")
+                if ending_bracket > -1:
+                    output_string = output_string[first_square_bracket:ending_bracket+1]
+            elif first_curly_bracket > -1:
+                # find ending bracket
+                ending_bracket = output_string.rfind("}")
+                if ending_bracket > -1:
+                    output_string = output_string[first_curly_bracket:ending_bracket+1]   
+            
+
+
         
         try:
             json_output = json.loads(output_string)
