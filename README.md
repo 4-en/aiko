@@ -91,6 +91,7 @@ pip install -r requirements.txt
 - [ ] integrate web ui
 - [ ] integrate RAG
 - [ ] train and use local LLM
+- [ ] full character creation using config files
 
 ## Unlikely
 - GUI with Qt
