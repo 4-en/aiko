@@ -8,19 +8,13 @@ With support for custom knowledge bases, embedding based text retrieval, web sea
 
 ## 🌟 Features
 
-Personalized AI Assistants – Custom memory for each user and AI character.
-
-Efficient RAG Pipelines – Optimized for resource-constrained hardware.
-
-Hybrid Retrieval – Use NanoVectorDB for local retrieval and web search for external data.
-
-API Integration – Seamlessly connect with OpenAI, Gemini, and other services.
-
-Modular Design – Easily extend with new retrieval and generation methods.
-
-Multi-Platform Support – Designed for Raspberry Pi 5 but runs on any Linux/Windows system.
-
-Discord Bot (Planned) – Bring Aiko-powered AI to Discord communities.
+- **Personalized AI Assistants** – Custom memory for each user and AI character.
+- **Efficient RAG Pipelines** – Optimized for resource-constrained hardware.
+- **Hybrid Retrieval** – Use NanoVectorDB for local retrieval and web search for external data.
+- **API Integration** – Seamlessly connect with OpenAI, Gemini, and other services.
+- **Modular Design** – Easily extend with new retrieval and generation methods.
+- **Multi-Platform Support** – Designed for Raspberry Pi 5 but runs on any Linux/Windows system.
+- **Discord Bot** – Bring Aiko-powered AI to Discord communities.
 
 ## 📂 Project Structure
 ```
@@ -43,13 +37,23 @@ aiko/
 
 ### Prerequisites
 
-Python 3.11
+Before installing, ensure you have:
 
-pip
+- **Python 3.11** (Recommended: Create a virtual environment)
+- **pip** (Python package manager)
+- **API Keys** (for OpenAI, Gemini, or any other external services)
 
-API Keys for external LLMs (if using OpenAI/Gemini)
+### Installation
 
-TODO: complete setup and examples
+Clone the repository:
+```sh
+git clone https://github.com/4-en/aiko.git
+cd aiko
+```
+Install dependencies:
+```sh
+pip install -r requirements.txt
+```
 
 ## 🛠 Roadmap
 
@@ -60,19 +64,19 @@ TODO: complete setup and examples
 - API for external applications 🛠
 
 ## Key Goals
-- have realistic conversations using web interface or chat program
-- hava distinct personality
-- hava a clear identity
-- remember past statements and information received
-- memories seperated by character and user
-- seamlessly change between characters/conversations
-- discord bot integration
-- web version (aiko.lol)
+- **Realistic conversations** via web or chat applications
+- **Distinct personality** per AI assistant
+- **Persistent memory** for both:
+  - **Users** (Aiko remembers past interactions)
+  - **Characters** (Each AI has its own unique memory)
+- **Seamless switching** between AI personas and conversations
+- **Discord bot** integration
+- **Web version** (aiko.lol)
 
 ## Improvements to 1.0
 - use more complex model as a base
 - use llm api (eg openai)
-- later, test different local approaches and finetune using LoRA
+- later, test different local approaches and fine-tune using LoRA
 - improve training data and training process
 - use RAG to access long term memory
 - use text to speech for audio output
