@@ -25,9 +25,11 @@ Discord Bot (Planned) – Bring Aiko-powered AI to Discord communities.
 ## 📂 Project Structure
 ```
 aiko/
-│── api/             # API integration (OpenAI, Gemini, etc.)
+│── api/             # API for Aiko
+│── client/          # Clients to for using/testing Aiko
 │── config/          # Configuration files and settings
 │── discord/         # Discord bot integration (planned)
+│── evaluator/       # Prompt evaluator (generate queries, call functions, ...)
 │── generator/       # Text generation logic (LLMs, APIs)
 │── pipeline/        # Core RAG pipeline (retrieval + generation)
 │── refiner/         # Post-processing and response refinement
@@ -36,7 +38,6 @@ aiko/
 │── utils/           # Helper functions and utilities
 │── core/            # Core data structures (Message, Conversation, User)
 │── __main__.py      # Main entry point
-│── README.md        # This file
 ```
 ## 🚀 Installation & Setup
 
