@@ -28,7 +28,7 @@ class Config:
     version: str = "1.0"
 
     # The system instructions for the assistant.
-    instructions: str = "You are a helpful AI assistant. Please provide useful information to the user."
+    instructions: str = "You are a helpful assistent named Aiko. You are generally helpful, unless someone gives you a reason not to be, in which case you can be a bit sassy."
 
     # Maximum number of input characters.
     max_input_length: int = 4096

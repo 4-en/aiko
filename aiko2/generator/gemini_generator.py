@@ -78,6 +78,7 @@ class GeminiGenerator(BaseGenerator):
         
         # Initialize the gemini api key
         genai.configure(api_key=API_KEY)
+        print(API_KEY)
         self.client = genai.GenerativeModel(self.model.value)
         self.client.generate_content
         
@@ -119,7 +120,8 @@ class GeminiGenerator(BaseGenerator):
             instruction = "\n".join(found_instructions)
             if self._last_instruction == None or self._last_instruction != instruction:
                 self._last_instruction = instruction
-                self.client = genai.GenerativeModel(self.model.value, instruction=instruction)
+                print("Setting instruction: ", instruction)
+                self.client = genai.GenerativeModel(self.model.value, system_instruction=instruction)
         return messages
     
     def convert_output_to_message(self, output:str) -> Message:
@@ -166,14 +168,9 @@ class GeminiGenerator(BaseGenerator):
                 raise ValueError("Gemini client not initialized.")
             
         try:
-            # TODO: add custom safety settings
-            # TODO: add generationConfig
-            # TODO: system instruction in request
-            response = self.client.generate_content(
-                contents=self.convert_conversation_to_input(conversation),
-                safety_settings=[
+            """ safety_settings=[
                     {
-                        "threshold": "OFF",
+                        "threshold": "BLOCK_NONE",
                         "category": cat
                     } for cat in [
                         "HARM_CATEGORY_DEROGATORY",
@@ -188,10 +185,32 @@ class GeminiGenerator(BaseGenerator):
                         "HARM_CATEGORY_DANGEROUS_CONTENT",
                         "HARM_CATEGORY_CIVIC_INTEGRITY"
                     ]
-                ]
+                ] """
+            # TODO: add custom safety settings
+            # TODO: add generationConfig
+            # TODO: system instruction in request
+            request = self.convert_conversation_to_input(conversation)
+            response = self.client.generate_content(
+                contents=request
             )
 
             return self.convert_output_to_message(response.text)
         except Exception as e:
             # TODO: handle this better
-            return f"Error: {str(e)}"
+            raise e
+        
+class Gemini15Flash(GeminiGenerator):
+    """
+    A generator that uses the Gemini 1.5 Flash model to generate responses.
+    """
+    
+    def __init__(self):
+        super().__init__(model=GeminiModel.GEMINI_1_5_FLASH)
+        
+class Gemini15Flash8B(GeminiGenerator):
+    """
+    A generator that uses the Gemini 1.5 Flash 8B model to generate responses.
+    """
+    
+    def __init__(self):
+        super().__init__(model=GeminiModel.GEMINI_1_5_FLASH_8B)

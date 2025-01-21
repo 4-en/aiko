@@ -110,6 +110,8 @@ class Pipeline(BasePipeline):
             whether to generate a response or not, for example if
             the message wasn't directed at the AI.
         """
+        conversation = conversation.copy()
+        conversation = self._limit_input_length(conversation)
         
         # Evaluate the conversation
         queries = []

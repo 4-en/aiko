@@ -25,6 +25,17 @@ class Conversation:
     def __post_init__(self):
         if not self.id:
             self.id = str(uuid4())
+            
+    def copy(self):
+        """
+        Create a copy of the conversation.
+        
+        Returns
+        -------
+        Conversation
+            The copy of the conversation.
+        """
+        return Conversation(messages=self.messages.copy(), id=self.id)
 
     def add_message(self, message: Message):
         """
