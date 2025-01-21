@@ -92,15 +92,17 @@ class BaseEvaluator():
         str
             The instructions for the evaluator.
         """
-        
-        instructions = """You are an evaluator.
+        name = self.config.name
+        instructions = f"""You are an evaluator named {name}.
         Your task is to decide whether to reply to a chat message or not, based on the conversation context, by generating a probability between 0.0 and 1.0 of replying to the message.
         Then, decide whether it is necessary to retrieve external information to reply to the message, by generating up to 3 queries to retrieve information.
         When asking about a specific person, including yourself, use the third person and their name.
+        
         Your other task is to decide if any content of the message should be memorized. Content that should be memorized is anything personal, either about yourself or another person.
-        This includes statements, plans, interests, appearances and more.
+        This includes statements, plans, interests, appearances and more. You can see it as storing information about something.
         You should not memorize any information that general knowledge, such as the capital of a country or the date of a holiday, unless specifically asked to do so.
         The memories should also be written in the third person and include the name of the person the memory is about.
+        For example, a memory about yourself could look like this: {name} likes cookie dough ice cream.
         """
         
         return instructions + "\n\n" + self._get_format_instruction()
