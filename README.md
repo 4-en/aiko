@@ -2,9 +2,9 @@
 
 ## Overview
 
-Aiko is a lightweight, modular Retrieval-Augmented Generation (RAG) framework designed to create personalized AI chat assistants. It is optimized to run efficiently on low-end hardware, such as the Raspberry Pi 5, while leveraging external APIs (e.g., OpenAI, Gemini) when needed.
+Aiko is a lightweight, modular Retrieval-Augmented Generation (RAG) framework designed to create personalized AI chat assistants. It is optimized to run efficiently on low-end hardware, such as the Raspberry Pi 5, while leveraging external APIs (e.g., OpenAI, Gemini) or small local models.
 
-With support for custom knowledge bases, FAISS retrieval, web search, and user-specific memory, Aiko provides a robust yet accessible AI assistant experience. Future plans include API and Discord integrations.
+With support for custom knowledge bases, embedding based text retrieval, web search, and user-specific memory, Aiko provides a robust yet accessible AI assistant experience. Future plans include API and Discord integrations.
 
 ## 🌟 Features
 
@@ -12,7 +12,7 @@ Personalized AI Assistants – Custom memory for each user and AI character.
 
 Efficient RAG Pipelines – Optimized for resource-constrained hardware.
 
-Hybrid Retrieval – Use FAISS for local retrieval and web search for external data.
+Hybrid Retrieval – Use NanoVectorDB for local retrieval and web search for external data.
 
 API Integration – Seamlessly connect with OpenAI, Gemini, and other services.
 
@@ -46,15 +46,13 @@ Python 3.11
 
 pip
 
-FAISS for local retrieval (optional but recommended)
-
 API Keys for external LLMs (if using OpenAI/Gemini)
 
 TODO: complete setup and examples
 
 ## 🛠 Roadmap
 
-- Implement FAISS-based local retrieval 🛠
+- Implement NanoVectorDB-based local retrieval 🛠
 - Web search integration 🛠
 - Persistent memory for users & characters 🛠
 - Discord bot integration 🛠
@@ -65,6 +63,8 @@ TODO: complete setup and examples
 - hava distinct personality
 - hava a clear identity
 - remember past statements and information received
+- memories seperated by character and user
+- seamlessly change between characters/conversations
 - discord bot integration
 - web version (aiko.lol)
 
@@ -79,9 +79,9 @@ TODO: complete setup and examples
 - run using fastapi for better integration 
 
 ## Progress
-- [ ] create basic api to reply to messages
+- [x] create basic api to reply to messages
 - [ ] integrate api into discord
-- [ ] use openai api for replies (no finetuning)
+- [x] use openai api for replies (no finetuning)
 - [ ] finetune openai model
 - [ ] integrate web ui
 - [ ] integrate RAG
@@ -92,3 +92,4 @@ TODO: complete setup and examples
 - Desktop companion
 - android app
 - GUI RAG pipeline builder
+- complex interactions between characters / characters acting without being prompted first (simulation/game)
