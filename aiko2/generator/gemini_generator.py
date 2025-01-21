@@ -120,7 +120,6 @@ class GeminiGenerator(BaseGenerator):
             instruction = "\n".join(found_instructions)
             if self._last_instruction == None or self._last_instruction != instruction:
                 self._last_instruction = instruction
-                print("Setting instruction: ", instruction)
                 self.client = genai.GenerativeModel(self.model.value, system_instruction=instruction)
         return messages
     
@@ -168,30 +167,31 @@ class GeminiGenerator(BaseGenerator):
                 raise ValueError("Gemini client not initialized.")
             
         try:
-            """ safety_settings=[
-                    {
-                        "threshold": "BLOCK_NONE",
-                        "category": cat
-                    } for cat in [
-                        "HARM_CATEGORY_DEROGATORY",
-                        "HARM_CATEGORY_TOXICITY",
-                        "HARM_CATEGORY_VIOLENCE",
-                        "HARM_CATEGORY_SEXUAL",
-                        "HARM_CATEGORY_MEDICAL",
-                        "HARM_CATEGORY_DANGEROUS",
-                        "HARM_CATEGORY_HARASSMENT",
-                        "HARM_CATEGORY_HATE_SPEECH",
-                        "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        "HARM_CATEGORY_DANGEROUS_CONTENT",
-                        "HARM_CATEGORY_CIVIC_INTEGRITY"
+            safety_settings=[
+                {
+                    "threshold": "BLOCK_NONE",
+                    "category": cat
+                } for cat in [
+                    #"HARM_CATEGORY_DEROGATORY",
+                    #"HARM_CATEGORY_TOXICITY",
+                    #"HARM_CATEGORY_VIOLENCE",
+                    "HARM_CATEGORY_SEXUAL",
+                    #"HARM_CATEGORY_MEDICAL",
+                    #"HARM_CATEGORY_DANGEROUS",
+                    "HARM_CATEGORY_HARASSMENT",
+                    "HARM_CATEGORY_HATE_SPEECH",
+                    "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    #"HARM_CATEGORY_CIVIC_INTEGRITY"
                     ]
-                ] """
+            ]
             # TODO: add custom safety settings
             # TODO: add generationConfig
             # TODO: system instruction in request
             request = self.convert_conversation_to_input(conversation)
             response = self.client.generate_content(
-                contents=request
+                contents=request,
+                safety_settings=safety_settings
             )
 
             return self.convert_output_to_message(response.text)

@@ -42,10 +42,14 @@ class Config:
     # where to log the conversations
     log_dir: str = "logs"
     
-    # llm configs
+    # generator configs
     max_generated_tokens: int = 256
     temperature: float = 0.7
     top_k: int = 50
     top_p: float = 0.9
+    
+    # evaluator configs
+    max_generated_queries: int = 3
+    max_evaluation_input_messages: int = 5
 
     
