@@ -1,6 +1,7 @@
 from aiko2.pipeline import Pipeline
 from aiko2.core import Conversation, Message, User, Role
 from aiko2.generator import TestGenerator, OpenAIGenerator, GeminiGenerator, Gemini15Flash8B
+from aiko2.evaluator import Gemini15Flash8BEvaluator
 
 
 class CLI:
@@ -8,7 +9,7 @@ class CLI:
     Basic command line interface to rest RAG functions.
     """
     def run():
-        pipeline = Pipeline(Gemini15Flash8B())
+        pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator())
 
         print("Welcome to AIKO2!")
         print("Type 'exit' to exit the program.")

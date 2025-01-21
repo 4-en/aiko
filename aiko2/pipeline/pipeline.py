@@ -72,6 +72,8 @@ class Pipeline(BasePipeline):
         
         # Setup the generator
         self.generator._setup(self.config)
+        if self.evaluator:
+            self.evaluator._setup(self.config)
         self._system_message = self._generate_system_message()
         
     def _generate_system_message(self) -> Message:
@@ -115,8 +117,19 @@ class Pipeline(BasePipeline):
         
         # Evaluate the conversation
         queries = []
-        if self.evaluator and self.retriever: # only evaluate if retriever is also present, otherwise pointless
-            queries = self.evaluator.generate_queries(conversation)
+        evaluator_context = []
+        if self.evaluator:
+            evaluation = self.evaluator.evaluate(conversation)
+            queries = evaluation.queries
+            evaluator_context = evaluation.context
+            reply_expectation = evaluation.reply_expectation
+            if reply_expectation <= 0.3:
+                # NOTE: This is kinda arbitrary, maybe a better way to handle this
+                # would be to have a bunch of yes/no questions about the conversation
+                # state and calculate a score based on that.
+                return None
+            
+            
         
         # Retrieve information
         if len(queries) > 0 and self.retriever:

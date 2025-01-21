@@ -78,7 +78,6 @@ class GeminiGenerator(BaseGenerator):
         
         # Initialize the gemini api key
         genai.configure(api_key=API_KEY)
-        print(API_KEY)
         self.client = genai.GenerativeModel(self.model.value)
         self.client.generate_content
         

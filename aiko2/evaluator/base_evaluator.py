@@ -1,4 +1,4 @@
-from aiko2.core import Conversation, Message, User
+from aiko2.core import Conversation, Message, User, Role
 from dataclasses import dataclass, field
 from aiko2.config import Config
 import typing_extensions as typing
@@ -48,7 +48,7 @@ class BaseEvaluator():
             The configuration to use for the evaluator.
         """
         self.config = config
-        if self.generator != None and self.generator.config != None:
+        if self.generator != None and not hasattr(self.generator, "config"):
             self.generator._setup(config)
         
     def _create_evaluation(self, conversation:Conversation, json_input:dict) -> Evaluation:
@@ -93,16 +93,20 @@ class BaseEvaluator():
             The instructions for the evaluator.
         """
         name = self.config.name
-        instructions = f"""You are an evaluator named {name}.
+        instructions = f"""You are an evaluator for {name}.
         Your task is to decide whether to reply to a chat message or not, based on the conversation context, by generating a probability between 0.0 and 1.0 of replying to the message.
+        This number represents how expected it is that the message should be replied to. For example, if {name} is in a conversation with the speaker or the speaker is asking a question, the probability should be higher.
+        If the message is not directed at {name}, the probability should be lower.
+        
         Then, decide whether it is necessary to retrieve external information to reply to the message, by generating up to 3 queries to retrieve information.
-        When asking about a specific person, including yourself, use the third person and their name.
+        When asking about a specific person, including {name}, use the third person and their name. The questions can be about general information or about more personal information.
+        Even if the user didn't directly ask a question, you can still generate queries to retrieve information if it could help in replying to the message.
         
         Your other task is to decide if any content of the message should be memorized. Content that should be memorized is anything personal, either about yourself or another person.
         This includes statements, plans, interests, appearances and more. You can see it as storing information about something.
         You should not memorize any information that general knowledge, such as the capital of a country or the date of a holiday, unless specifically asked to do so.
         The memories should also be written in the third person and include the name of the person the memory is about.
-        For example, a memory about yourself could look like this: {name} likes cookie dough ice cream.
+        For example, a memory about {name} could look like this: {name} likes cookie dough ice cream.
         """
         
         return instructions + "\n\n" + self._get_format_instruction()
@@ -147,9 +151,9 @@ class BaseEvaluator():
             input_messages_length = 1
             
         input_messages = conversation.messages[-input_messages_length:]
-        input_messages = [message for message in input_messages if message.role != User.Role.SYSTEM]
+        input_messages = [message for message in input_messages if message.user.role != Role.SYSTEM]
         
-        system_message = Message(self.get_instructions(), User("System", User.Role.SYSTEM))
+        system_message = Message(self.get_instructions(), User("System", Role.SYSTEM))
         input_messages.insert(0, system_message)
         
         input_conversation = Conversation(input_messages)
@@ -162,12 +166,16 @@ class BaseEvaluator():
         
         output_string = output_message.content
         
+        if output_string.startswith("```json"):	
+            output_string = output_string[7:-4]
+        
         try:
             json_output = json.loads(output_string)
             evaluation = self._create_evaluation(input_conversation, json_output)
             
         except json.JSONDecodeError:
             print("Error decoding JSON output from generator.")
+            print(output_string)
             return evaluation
         except Exception as e:
             print("Error processing output from generator.")
