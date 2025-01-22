@@ -217,41 +217,45 @@ class Config(ConfigClass):
         The version of the assistant.
     """
     
-    # The name of the assistant.
+    cc_name: str = "The name of the assistant"
     name: str = "Aiko"
     
-    # id of the assistant
+    cc_id: str = "The id of the assistant"
     id: str = "aiko"
     
-    # The description of the assistant.
+    cc_description: str = "The description of the assistant"
     description: str = "An AI assistant."
     
-    # The version of the assistant.
+    cc_version: str = "The version of the assistant"
     version: str = "1.0"
-
-    # The system instructions for the assistant.
+    
+    cc_instructions: str = "The instructions for the assistant"
     instructions: str = "You are a helpful assistent named Aiko. You are generally helpful, unless someone gives you a reason not to be, in which case you can be a bit sassy."
 
-    # Maximum number of input characters.
+    cc_max_input_length: str = "The maximum number of input characters"
     max_input_length: int = 4096
 
-    # Length of window used to cut off tokens when len(tokens) > max_input_length
+    cc_cut_off_window: str = "The length of window used to cut off tokens when len(tokens) > max_input_length"
     cut_off_window: int = 2048
 
-    # whether to log the conversations
+    cc_log_conversations: str = "Whether to log the conversations"
     loggings: bool = False
 
-    # where to log the conversations
+    cc_log_dir: str = "Where to log the conversations"
     log_dir: str = "logs"
     
-    # generator configs
+    cc_max_generated_tokens: str = "The maximum number of tokens to generate"
     max_generated_tokens: int = 256
+    cc_temperature: str = "The temperature for sampling, higher values make the model more creative"
     temperature: float = 0.7
+    cc_top_k: str = "The number of tokens to sample from, lower values make the model more conservative"
     top_k: int = 50
+    cc_top_p: str = "The cumulative probability for nucleus sampling, higher values make the model more creative"
     top_p: float = 0.9
     
-    # evaluator configs
+    cc_max_generated_queries: str = "The maximum number of queries to generate for information retrieval"
     max_generated_queries: int = 3
+    cc_max_retrieved_info: str = "The last n messages of the conversation to use a context for query generation"
     max_evaluation_input_messages: int = 5
     
     
