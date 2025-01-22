@@ -117,9 +117,9 @@ class BaseEvaluator():
         """
         
         format_instruction = """Use this JSON schema:
-        
+        QueryType = 'general' | 'personal' | 'news' | 'research' | 'other'
         Memory = {'memory': str, 'person': str, 'topic': str}
-        Query = {'query': str, 'topic': str}
+        Query = {'query': str, 'topic': str, 'type': QueryType}
         Evaluation = {'reply_expectation': float, 'queries': list[Query], 'memories': list[Memory]}
         Return: Evaluation"""
         
