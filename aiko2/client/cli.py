@@ -21,14 +21,15 @@ class CLI:
         pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator())
 
         print("Welcome to AIKO2!")
+        name = input("What is your name? ")
         print("Type 'exit' to exit the program.")
 
-        user = User("User", Role.USER)
+        user = User(name, Role.USER)
         conversation = Conversation()
 
 
         while True:
-            user_input = input("USER: ")
+            user_input = input(f"{name}: ")
             if user_input.lower() == 'exit':
                 break
 

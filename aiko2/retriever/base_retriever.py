@@ -40,7 +40,7 @@ class BaseRetriever(ABC):
         Get the sentence transformer model.
         """
         if not BaseRetriever._sentence_transformer_model:
-            BaseRetriever._sentence_transformer_model = sentence_transformers.SentenceTransformer('paraphrase-MiniLM-L6-v2')
+            BaseRetriever._sentence_transformer_model = sentence_transformers.SentenceTransformer('all-MiniLM-L6-v2')
         return BaseRetriever._sentence_transformer_model
     
     def embed(text:str) -> np.ndarray:
