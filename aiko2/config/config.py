@@ -49,7 +49,7 @@ class ConfigClass:
                 if not hasattr(self, key):
                     setattr(self, key, value)
         
-    def load(self, file_name):
+    def load(self, file_name, create_if_missing=True) -> object:
         """
         Load the configuration from the file.
         
@@ -58,6 +58,13 @@ class ConfigClass:
         file_name : str
             The name of the file to load the configuration from.
             If None, the default file name will be used.
+        create_if_missing : bool, optional
+            Whether to create a new file if the file does not exist. The default is True.
+            
+        Returns
+        -------
+        ConfigClass (or subclass)
+            The configuration object itself.
         """
         fields = {}
         
@@ -68,9 +75,12 @@ class ConfigClass:
             self.__file_name = file_name
             
         if not os.path.exists(file_name):
-            print(f"File {file_name} does not exist. Creating a new one.")
-            self.save(file_name)
-            return
+            if create_if_missing:
+                print(f"File {file_name} does not exist. Creating a new one.")
+                self.save(file_name)
+            else:
+                print(f"File {file_name} does not exist.")
+            return self
             
         annotations = getattr(self, "__annotations__", {})
         has_annotations = bool(annotations)
@@ -133,6 +143,8 @@ class ConfigClass:
         for key, value in fields.items():
             if hasattr(self, key) and not key.startswith("_"):
                 setattr(self, key, value)
+                
+        return self
         
         
     def save(self, file_name=None):

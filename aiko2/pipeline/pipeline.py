@@ -6,6 +6,7 @@ from aiko2.evaluator import BaseEvaluator
 from aiko2.generator import BaseGenerator
 from aiko2.refiner import BaseRefiner
 from aiko2.retriever import BaseRetriever, RetrievalResults
+from aiko2.utils import get_storage_location
 
 class Pipeline(BasePipeline):
     """
@@ -68,7 +69,7 @@ class Pipeline(BasePipeline):
         self.evaluator: BaseEvaluator = evaluator
         self.retriever: BaseRetriever = retriever
         self.refiner: BaseRefiner = refiner
-        self.config: Config = config or Config()
+        self.config: Config = config or Config().load(get_storage_location("aiko2", create=True)+"/config.txt")
         
         # Setup the generator
         self.generator._setup(self.config)

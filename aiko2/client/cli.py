@@ -5,6 +5,7 @@ from aiko2.evaluator import Gemini15Flash8BEvaluator
 from aiko2.config import Config
 
 from dotenv import load_dotenv
+import logging
 
 
 class CLI:
@@ -12,11 +13,12 @@ class CLI:
     Basic command line interface to rest RAG functions.
     """
     def run():
+        logging.basicConfig(level=logging.INFO)
 
         # Load environment variables
         load_dotenv()
 
-        pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator(), config=Config())
+        pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator())
 
         print("Welcome to AIKO2!")
         print("Type 'exit' to exit the program.")
