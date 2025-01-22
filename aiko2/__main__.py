@@ -10,5 +10,5 @@ if __name__ == "__main__":
     from aiko2.client import CLI
     from aiko2.discord import BasicDiscordBot
 
-    CLI.run()
-    # BasicDiscordBot.main()
+    # CLI.run()
+    BasicDiscordBot.main()

@@ -3,6 +3,7 @@ from aiko2.core import Conversation, Message, User, Role
 from aiko2.generator import TestGenerator, OpenAIGenerator, GeminiGenerator, Gemini15Flash8B
 from aiko2.evaluator import Gemini15Flash8BEvaluator
 from aiko2.config import Config
+from aiko2.retriever import WebRetriever
 
 from dotenv import load_dotenv
 import logging
@@ -18,7 +19,7 @@ class CLI:
         # Load environment variables
         load_dotenv()
 
-        pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator())
+        pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator(), retriever=WebRetriever())
 
         print("Welcome to AIKO2!")
         name = input("What is your name? ")

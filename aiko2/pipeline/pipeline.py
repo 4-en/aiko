@@ -149,7 +149,10 @@ class Pipeline(BasePipeline):
         
         # Retrieve information
         if len(queries) > 0 and self.retriever:
-            retrieved_info = self.retriever.retrieve(queries)
+            queries = [query["query"] for query in queries if query]
+            queries = [query for query in queries if query]
+            # TODO: make better use of meta data
+            retrieved_info = self.retriever.retrieve(conversation, queries)
             if len(retrieved_info) > 0:
                 self._append_retrieval_results(conversation, retrieved_info)
         
@@ -158,6 +161,7 @@ class Pipeline(BasePipeline):
         
         
         # Generate response
+        print(f"Reqquest: {conversation}")
         response = self.generator.generate(conversation)
         
         # Refine response
@@ -180,9 +184,17 @@ class Pipeline(BasePipeline):
         # creates new messages in the conversation, for example:
         # <Expert> The capital of France is Paris.
 
-        # TODO: Implement this method
+        last_message = conversation.messages[-1]
+        conversation.messages = conversation.messages[:-1]
 
-        return conversation
+        for result in retrieved_info.search_results:
+            query_result = result.results[0] if len(result.results) > 0 else None
+            if query_result:
+                logging.debug(f"Appending query result: {query_result}")
+                message = Message(query_result, User("[EXPERT]", Role.USER))
+                conversation.messages.append(message)
+
+        conversation.messages.append(last_message)
     
     def _limit_input_length(self, conversation: Conversation) -> Conversation:
         """
