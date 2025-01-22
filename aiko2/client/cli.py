@@ -13,7 +13,7 @@ class CLI:
     Basic command line interface to rest RAG functions.
     """
     def run():
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.DEBUG)
 
         # Load environment variables
         load_dotenv()

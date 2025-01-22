@@ -7,6 +7,7 @@ from aiko2.generator import BaseGenerator
 from aiko2.refiner import BaseRefiner
 from aiko2.retriever import BaseRetriever, RetrievalResults
 from aiko2.utils import get_storage_location
+import logging
 
 class Pipeline(BasePipeline):
     """
@@ -122,10 +123,15 @@ class Pipeline(BasePipeline):
         if self.evaluator:
             evaluation = self.evaluator.evaluate(conversation)
             queries = evaluation.queries
+            logging.debug(f"Generated queries: {queries}")
             evaluator_context = evaluation.context
+            logging.debug(f"Evaluator context: {evaluator_context}")
+            memories = evaluation.memories
+            logging.debug(f"Memories: {memories}")
             reply_expectation = evaluation.reply_expectation
+            logging.debug(f"Reply expectation: {reply_expectation}")
             if reply_expectation <= 0.3:
-                # NOTE: This is kinda arbitrary, maybe a better way to handle this
+                # TODO: NOTE: This is kinda arbitrary, maybe a better way to handle this
                 # would be to have a bunch of yes/no questions about the conversation
                 # state and calculate a score based on that.
                 return None
