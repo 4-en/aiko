@@ -2,7 +2,7 @@ from aiko2.pipeline import Pipeline
 from aiko2.core import Conversation, Message, User, Role
 from aiko2.generator import TestGenerator, OpenAIGenerator, GeminiGenerator, Gemini15Flash8B
 from aiko2.evaluator import Gemini15Flash8BEvaluator
-from aiko2.config import AikoConfig
+from aiko2.config import Config
 
 from dotenv import load_dotenv
 
@@ -16,7 +16,7 @@ class CLI:
         # Load environment variables
         load_dotenv()
 
-        pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator(), config=AikoConfig())
+        pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator(), config=Config())
 
         print("Welcome to AIKO2!")
         print("Type 'exit' to exit the program.")

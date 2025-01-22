@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from json import loads, dumps
+import os
 
 class ConfigClass:
     """
@@ -65,6 +66,11 @@ class ConfigClass:
         else:
             file_name = file_name or "config.txt"
             self.__file_name = file_name
+            
+        if not os.path.exists(file_name):
+            print(f"File {file_name} does not exist. Creating a new one.")
+            self.save(file_name)
+            return
             
         annotations = getattr(self, "__annotations__", {})
         has_annotations = bool(annotations)
