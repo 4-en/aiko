@@ -4,7 +4,7 @@ import discord
 from aiko2.core import Conversation, Message, User, Role
 from aiko2.pipeline import Pipeline
 from aiko2.generator import OpenAIGenerator, Gemini15Flash8B
-from aiko2.config import AikoConfig
+from aiko2.config import AikoConfig, Config
 import traceback
 
 class BasicDiscordBot(discord.Client):
@@ -12,7 +12,10 @@ class BasicDiscordBot(discord.Client):
     def __init__(self, *, intents, **options):
         super().__init__(intents=intents, **options)
         self.conversations = {}
-        self.pipeline = Pipeline(Gemini15Flash8B(), config=AikoConfig())
+        config = AikoConfig()
+        config.load("config.txt")
+        self.pipeline = Pipeline(Gemini15Flash8B(), config=config)
+        self.pipeline.config.save()
         self.bot_user = User(self.pipeline.config.name, Role.ASSISTANT)
     
     async def on_ready(self):
