@@ -1,9 +1,6 @@
 from . import RetrievalResults, QueryResults, BaseRetriever
 from aiko2.core import Conversation
 
-
-import aiohttp
-import asyncio
 import re
 from bs4 import BeautifulSoup
 from duckduckgo_search import DDGS
@@ -100,40 +97,7 @@ def contains_text(s, min_words=2):
     words = re.findall(r'\b[a-zA-Z]{2,}\b', s)  # Find words with at least 2 letters
     return len(words) >= min_words
 
-async def fetch(session, url):
-    """Asynchronously fetch the content of a URL."""
-    headers = {"User-Agent": "Mozilla/5.0"}
-    try:
-        async with session.get(url, headers=headers, timeout=10) as response:
-            if response.status == 200:
-                return await response.text()
-            else:
-                return None
-    except Exception as e:
-        print(f"Failed to fetch {url}: {e}")
-        return None
 
-async def scrape_website(session, url):
-    """Asynchronously scrape a webpage and extract properly formatted text."""
-    try:
-        html = await fetch(session, url)
-        if html:
-            try:
-                doc = Document(html)  # Extracts main readable content
-                soup = BeautifulSoup(doc.summary(), "html.parser")  # Parse with BeautifulSoup
-                
-                paragraphs = [p.get_text(" ", strip=True) for p in soup.find_all("p") if p.get_text(strip=True)]
-                formatted_text = "\n\n".join(paragraphs)  # Keep paragraph breaks
-
-                # Remove spaces before punctuation (e.g., "word ." → "word.")
-                clean_text = re.sub(r"\s+([.,!?;:()\[\]'])", r"\1", formatted_text)
-
-                return url, doc.title(), clean_text
-            except Exception as e:
-                return url, "Error", f"Failed to parse content: {e}"
-    except Exception as e:
-        print(f"Failed to fetch {url}: {e}")
-    return url, "Error", "Failed to retrieve page"
 
 def scrape_website_sync(url):
     """Scrape a webpage and extract properly formatted text."""
@@ -152,17 +116,6 @@ def scrape_website_sync(url):
     except Exception as e:
         return url, "Error", f"Failed to parse content: {e}"
 
-async def get_search_results(query, num_results=5, time_filter="all"):
-    """Get search result URLs from DuckDuckGo asynchronously with optional date filtering."""
-    results = []
-    time_code = DATE_FILTERS.get(time_filter.lower(), None)  # Get time filter code
-
-    with DDGS() as ddgs:
-        for result in ddgs.text(query, max_results=num_results, timelimit=time_code):
-            if not is_blacklisted(result["href"]) and not matches_useless_pattern(result["href"]):
-                results.append(result["href"])
-    
-    return results
 
 def get_search_results_sync(query, num_results=5, time_filter="all"):
     """Get search result URLs from DuckDuckGo synchronously with optional date filtering."""
@@ -200,54 +153,18 @@ class WebRetriever(BaseRetriever):
         # Initialize the query results
         query_results = [ QueryResults(query) for query in queries ]
 
-        # Create an new event loop
-        loop = asyncio.get_event_loop()
+        for query_result, query in zip(query_results, queries):
+            print(f"\nSearching for: {query}...\n")
+            try:
+                search_results = get_search_results_sync(query)
+                tasks = [scrape_website_sync(url) for url in search_results]
+                scraped_data = [task for task in tasks]
+                for idx, (url, title, content) in enumerate(scraped_data, 1):
+                    if contains_text(content, min_words=10):                
+                        query_result.add_result(content)
+            except Exception as e:
+                print(f"Failed to retrieve search results: {e}")
 
-        if not loop.is_running():
-
-            # Get the search results asynchronously
-            async def get_search_results_async(query, num_results=5, time_filter="all"):
-                return await get_search_results(query, num_results, time_filter)
-            
-            async def get_query_results(query_results:QueryResults, query):
-                async with aiohttp.ClientSession() as session:
-                    print(f"\nSearching for: {query}...\n")
-                    try:
-                        search_results = await get_search_results_async(query)
-                        tasks = [scrape_website(session, url) for url in search_results]
-                        scraped_data = await asyncio.gather(*tasks)
-                        for idx, (url, title, content) in enumerate(scraped_data, 1):
-                            if contains_text(content, min_words=10):
-                                # TODO: requery if not enough results
-                                query_results.add_result(content)
-                    except Exception as e:
-                        print(f"Failed to retrieve search results: {e}")
-                        
-
-            # Run the asynchronous tasks
-            async def run_queries():
-                for query_result, query in zip(query_results, queries):
-                    await get_query_results(query_result, query)
-
-            loop.run_until_complete(run_queries())
-
-        else:
-            for query_result, query in zip(query_results, queries):
-                print(f"\nSearching for: {query}...\n")
-                try:
-                    search_results = get_search_results_sync(query)
-                    tasks = [scrape_website_sync(url) for url in search_results]
-                    scraped_data = [task for task in tasks]
-                    for idx, (url, title, content) in enumerate(scraped_data, 1):
-                        if contains_text(content, min_words=10):
-                
-                            query_result.add_result(content)
-                except Exception as e:
-                    print(f"Failed to retrieve search results: {e}")
-                
-
-        
-        
         return query_results
     
     def retrieve(self, conversation, queries) -> RetrievalResults:
