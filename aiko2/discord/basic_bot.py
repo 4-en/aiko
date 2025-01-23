@@ -1,17 +1,21 @@
 from dotenv import load_dotenv
 import os
 import discord
+from concurrent.futures import ThreadPoolExecutor
 from aiko2.core import Conversation, Message, User, Role
 from aiko2.pipeline import Pipeline
 from aiko2.generator import OpenAIGenerator, Gemini15Flash8B
 from aiko2.retriever import WebRetriever
 from aiko2.evaluator import Gemini15Flash8BEvaluator
 import traceback
+import asyncio
 
 class BasicDiscordBot(discord.Client):
     
     def __init__(self, *, intents, **options):
         super().__init__(intents=intents, **options)
+        self.message_queue = []
+        self.executor = ThreadPoolExecutor(max_workers=2)
         self.conversations = {}
         self.pipeline = Pipeline(Gemini15Flash8B(), retriever=WebRetriever(), evaluator=Gemini15Flash8BEvaluator())
         self.bot_user = User(self.pipeline.config.name, Role.ASSISTANT)
@@ -20,7 +24,7 @@ class BasicDiscordBot(discord.Client):
         print(f'Logged on as {self.user}!')
         
     async def _generate_reply(self, channel, conversation):
-        response = self.pipeline.generate(conversation)
+        response = await asyncio.get_event_loop().run_in_executor(self.executor, self.pipeline.generate, conversation)
         if response:
             content = response.content
             await channel.send(content)
