@@ -161,7 +161,7 @@ class Pipeline(BasePipeline):
         
         
         # Generate response
-        print(f"Reqquest: {conversation}")
+        # print(f"Request: {conversation}")
         response = self.generator.generate(conversation)
         
         # Refine response
@@ -191,7 +191,7 @@ class Pipeline(BasePipeline):
             query_result = result.results[0] if len(result.results) > 0 else None
             if query_result:
                 logging.debug(f"Appending query result: {query_result}")
-                message = Message(query_result, User("[EXPERT]", Role.USER))
+                message = Message(query_result, User("INNER_MONOLOGUE", Role.USER))
                 conversation.messages.append(message)
 
         conversation.messages.append(last_message)
