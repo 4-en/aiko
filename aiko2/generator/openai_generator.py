@@ -159,7 +159,7 @@ class OpenAIGenerator(BaseGenerator):
             return self.convert_output_to_message(response.choices[0].message.content)
         except Exception as e:
             # TODO: handle this better
-            return f"Error: {str(e)}"
+            raise e
         
                 
 class GPT4OGenerator(OpenAIGenerator):
