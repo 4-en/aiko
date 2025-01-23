@@ -149,7 +149,7 @@ class Pipeline(BasePipeline):
         
         # Retrieve information
         if len(queries) > 0 and self.retriever:
-            queries = [query["query"] for query in queries if query]
+            queries = [query["query"] for query in queries if query and query["type"] != "PERSONAL"]
             queries = [query for query in queries if query]
             # TODO: make better use of meta data
             retrieved_info = self.retriever.retrieve(conversation, queries)

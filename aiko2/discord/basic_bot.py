@@ -4,7 +4,7 @@ import discord
 from concurrent.futures import ThreadPoolExecutor
 from aiko2.core import Conversation, Message, User, Role
 from aiko2.pipeline import Pipeline
-from aiko2.generator import OpenAIGenerator, Gemini15Flash8B
+from aiko2.generator import OpenAIGenerator, Gemini15Flash8B, GPT4OMiniGenerator
 from aiko2.retriever import WebRetriever
 from aiko2.evaluator import Gemini15Flash8BEvaluator
 from aiko2.utils import split_text
@@ -18,7 +18,7 @@ class BasicDiscordBot(discord.Client):
         self.message_queue: list[tuple[discord.TextChannel, Conversation]] = []
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.conversations: dict[int, Conversation] = {}
-        self.pipeline = Pipeline(OpenAIGenerator(), retriever=WebRetriever(), evaluator=Gemini15Flash8BEvaluator())
+        self.pipeline = Pipeline(GPT4OMiniGenerator(), retriever=WebRetriever(), evaluator=Gemini15Flash8BEvaluator())
         self.bot_user = User(self.pipeline.config.name, Role.ASSISTANT)
         self._generating = False
     
@@ -37,14 +37,15 @@ class BasicDiscordBot(discord.Client):
             await channel.send(content)
 
         
-    async def _generate_reply(self, channel, conversation):
+    async def _generate_reply(self, channel:discord.TextChannel, conversation):
         self._generating = True
-        response = await asyncio.get_event_loop().run_in_executor(self.executor, self.pipeline.generate, conversation)
-        self._generating = False
+        async with channel.typing():
+            response = await asyncio.get_event_loop().run_in_executor(self.executor, self.pipeline.generate, conversation)
+            self._generating = False
 
-        if response:
-            content = response.content
-            await self._send_message(channel, content)
+            if response:
+                content = response.content
+                await self._send_message(channel, content)
 
         if self.message_queue:
             # only respond to the last message in the queue
