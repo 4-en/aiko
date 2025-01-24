@@ -123,6 +123,10 @@ class Pipeline(BasePipeline):
             whether to generate a response or not, for example if
             the message wasn't directed at the AI.
         """
+        
+        # in case the conversation was not a request from an api and is the same object used to
+        # store the actual conversation history, we need to copy it to avoid modifying the original
+        # with things like instructions, system messages, etc.
         conversation = conversation.copy()
         conversation = self._limit_input_length(conversation)
         
@@ -143,14 +147,15 @@ class Pipeline(BasePipeline):
                 # TODO: NOTE: This is kinda arbitrary, maybe a better way to handle this
                 # would be to have a bunch of yes/no questions about the conversation
                 # state and calculate a score based on that.
+                
+                # also take into consideration meta data of conversation, like users, timestamps, private/group chat, etc.
                 return None
             
             
         
         # Retrieve information
         if len(queries) > 0 and self.retriever:
-            queries = [query["query"] for query in queries if query and query["type"] != "PERSONAL"]
-            queries = [query for query in queries if query]
+            queries = [query for query in queries if query and query.query_type != "PERSONAL"]
             # TODO: make better use of meta data
             retrieved_info = self.retriever.retrieve(conversation, queries)
             if len(retrieved_info) > 0:
@@ -182,7 +187,14 @@ class Pipeline(BasePipeline):
             The retrieved information to append to the conversation.
         """
         # creates new messages in the conversation, for example:
-        # <Expert> The capital of France is Paris.
+        # <INNER MONOLOGUE> The capital of France is Paris. <-- retrieved information
+        # <USER> What is the capital of France?
+        # <ASSISTANT> (Answer based on retrieved information)
+        # <USER> Thanks!
+        # We insert the retrieved information before the last message in the conversation,
+        # to make it easier for the model to attend to the actual question asked by the user.
+        # TODO: Consider adding user question before AND after the retrieved information? This might help the model to extract the correct context.
+        return # TODO: fix this
 
         last_message = conversation.messages[-1]
         conversation.messages = conversation.messages[:-1]
@@ -191,7 +203,7 @@ class Pipeline(BasePipeline):
             query_result = result.results[0] if len(result.results) > 0 else None
             if query_result:
                 logging.debug(f"Appending query result: {query_result}")
-                message = Message(query_result, User("INNER_MONOLOGUE", Role.USER))
+                message = Message(query_result, User("INNER_MONOLOGUE", Role.ASSISTANT))
                 conversation.messages.append(message)
 
         conversation.messages.append(last_message)

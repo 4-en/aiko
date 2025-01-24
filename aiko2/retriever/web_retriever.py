@@ -1,4 +1,4 @@
-from . import RetrievalResults, QueryResults, BaseRetriever
+from . import RetrievalResults, QueryResult, BaseRetriever, Query
 from aiko2.core import Conversation
 
 import re
@@ -135,13 +135,13 @@ class WebRetriever(BaseRetriever):
     
     """
 
-    def query(self, queries):
+    def query(self, queries: list[Query]) -> RetrievalResults:
         """
         Query the web for information using a list of queries.
         
         Parameters
         ----------
-        queries : List[str]
+        queries : List[Query]
             A list of queries to retrieve information.
         
         Returns
@@ -151,23 +151,27 @@ class WebRetriever(BaseRetriever):
         """
         
         # Initialize the query results
-        query_results = [ QueryResults(query) for query in queries ]
+        retrieval_results = RetrievalResults()
 
-        for query_result, query in zip(query_results, queries):
-            print(f"\nSearching for: {query}...\n")
+        for query in queries:
+            print(f"\nSearching for: {query.query}...\n")
             try:
-                search_results = get_search_results_sync(query)
+                # get results from search engine
+                search_results = get_search_results_sync(query.query)
+                # scrape the content from the search results
                 tasks = [scrape_website_sync(url) for url in search_results]
                 scraped_data = [task for task in tasks]
+                
                 for idx, (url, title, content) in enumerate(scraped_data, 1):
                     if contains_text(content, min_words=10):                
-                        query_result.add_result(content)
+                        query_result = QueryResult(content, query, source=url, retriever=self)
+                        retrieval_results.add_result(query_result)
             except Exception as e:
                 print(f"Failed to retrieve search results: {e}")
 
-        return query_results
+        return retrieval_results
     
-    def retrieve(self, conversation, queries) -> RetrievalResults:
+    def retrieve(self, conversation: Conversation, queries: list[Query]) -> RetrievalResults:
         """
         Retrieve information from the web using a query.
         
@@ -187,10 +191,10 @@ class WebRetriever(BaseRetriever):
         # Initialize the results
         
         # Get the query results
-        query_results = self.query(queries)
+        retrieval_results = self.query(queries)
         
         # Add the query results to the retrieval results
-        retrieval_results = RetrievalResults(query_results)
+        # retrieval_results = RetrievalResults(query_results)
         retrieval_results.rank_results()
         
         return retrieval_results

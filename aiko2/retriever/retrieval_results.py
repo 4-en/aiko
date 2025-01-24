@@ -79,7 +79,7 @@ class QueryResult:
     scoring_method: str | None = None
     source: str | None = None
     retriever: str | None = None
-    parent: 'QueryResult' | None = None
+    parent: 'QueryResult' = None
     parent_part_index: int | None = None
     
     def __eq__(self, value):
@@ -371,14 +371,28 @@ class RetrievalResults:
 
     Attributes
     ----------
-    query_results : List[QueryResults]
-        The results of the queries.
+    results : Dict[str, QueryResults]
+        The results of the retrieval operation, grouped by query.
     scoring_method: str
         The method used to score the results.
     """
 
-    search_results: list[QueryResults] = field(default_factory=list)
+    results: dict[str, QueryResult] = field(default_factory=dict)
     scoring_method: str | None = None
+    
+    def add_result(self, query_result: QueryResult):
+        """
+        Add a result to the retrieval results.
+        
+        Parameters
+        ----------
+        query_result : QueryResult
+            The result to add.
+        """
+        if query_result.query.query_id not in self.results:
+            self.results[query_result.query.query_id] = [ query_result ]
+        else:
+            self.results[query_result.query.query_id].append(query_result)
 
     def __len__(self) -> int:
         """
@@ -389,15 +403,89 @@ class RetrievalResults:
         int
             The number of results.
         """
-        return sum(len(qr) for qr in self.search_results)
+        n = 0
+        for query_id in self.results:
+            n += len(self.results[query_id])
+        return n
     
     def rank_results(self, scoring_method: str = "cosine"):
         """
-        Rank the results based on the scoring method.
+        Rank the results based on the scoring method and adjust their scores.
         """
-        self.scoring_method = scoring_method
-        for query_results in self.search_results:
-            query_results.rank_my_results(scoring_method)
+        pass
+    
+    def top_k(self, k: int | None, min_score: float | None=None, query: Query | None=None) -> list[QueryResult]:
+        """
+        Get the top k results.
+        
+        Parameters
+        ----------
+        k : int
+            The number of top results to get.
+            If k is None, return all results.
+        min_score : float, optional
+            The minimum score of the results. The default is None.
+        query : Query, optional
+            The query to get the top results for. If None, get the top results for all queries in one ranking.
+            
+        Returns
+        -------
+        List[QueryResult]
+            The top k results.
+        """
+        
+        results = []
+        
+        if query is not None:
+            # Get results for a specific query
+            if query.query_id in self.results:
+                query_results = self.results[query.query_id]
+                query_results.sort(key=lambda x: x.score, reverse=True)
+                if k is not None:
+                    results = query_results[:k]
+                else:
+                    results = query_results
+            else:
+                return []
+        else:
+            # Get results for all queries
+            all_results = []
+            for query_id in self.results:
+                all_results.extend(self.results[query_id])
+            all_results.sort(key=lambda x: x.score, reverse=True)
+            if k is not None:
+                results = all_results[:k]
+            else:
+                results = all_results
+                
+        if min_score is not None:
+            results = [result for result in results if result.score >= min_score]
+            
+        return results
+        
+    def extend(self, other):
+        """
+        Extend the results with the results from another RetrievalResults object.
+        
+        Parameters
+        ----------
+        other : RetrievalResults
+            The other RetrievalResults object to extend the results with.
+        """
+        for query_id in other.results:
+            if query_id not in self.results:
+                self.results[query_id] = other.results[query_id]
+            else:
+                self.results[query_id].extend(other.results[query_id])
+
+        if other.scoring_method != self.scoring_method:
+            # If scoring methods are different, set to None to indicate mixed scoring methods
+            # To rank results, the results should be re-scored using a single
+            # scoring method
+            self.scoring_method = None
+            for query_id in self.results:
+                for result in self.results[query_id]:
+                    result.score = None
 
 
 
