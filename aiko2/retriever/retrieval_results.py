@@ -2,6 +2,45 @@ from dataclasses import dataclass, field
 import sentence_transformers
 import numpy as np
 import rank_bm25
+from uuid import uuid4
+
+@dataclass
+class Query:
+    """
+    A class to hold a query.
+    
+    Attributes
+    ----------
+    query : str
+        The query string.
+    topic : str
+        The topic of the query.
+    query_type : str
+        The type of the query.
+        One of 'GENERAL', 'PERSONAL', 'NEWS', 'RESEARCH', 'OTHER'.
+    
+    query_id : str
+        The id of the query.
+    """
+    
+    query: str
+    topic: str
+    query_type: str
+    query_id: str | None = None
+    
+    def __post_init__(self):
+        if self.query_id is None:
+            self.query_id = str(uuid4())
+            
+    def __eq__(self, value):
+        if not isinstance(value, Query):
+            return False
+        
+        if self.query_id or value.query_id:
+            return self.query_id == value.query_id
+        
+        return self.query == value.query and self.topic == value.topic and self.query_type == value.query_type
+    
 
 @dataclass
 class QueryResults:

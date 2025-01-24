@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from aiko2.config import Config
 import typing_extensions as typing
 from aiko2.generator.base_generator import BaseGenerator
+from aiko2.retriever import Query
 import json
 
 class EvaluatorResponse(typing.TypedDict):
