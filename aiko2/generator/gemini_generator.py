@@ -56,6 +56,12 @@ class GeminiGenerator(BaseGenerator):
         self.client = None
 
         self._last_instruction = None
+
+        self.generation_config = genai.GenerationConfig(
+            temperature=1.1,
+            top_k=40,
+            top_p=0.9,
+        )
         
     def _setup_client(self):
         """
@@ -143,7 +149,7 @@ class GeminiGenerator(BaseGenerator):
         message = Message(output, self.assistant)
         return message
     
-    def generate(self, conversation) -> Message:
+    def generate(self, conversation, generation_config=None) -> Message:
         """
         Generate a response based on the conversation using the OpenAI API.
         
@@ -164,6 +170,8 @@ class GeminiGenerator(BaseGenerator):
             self._setup_client()
             if self.client is None:
                 raise ValueError("Gemini client not initialized.")
+            
+        generation_config = generation_config or self.generation_config
             
         try:
             safety_settings=[
@@ -190,7 +198,8 @@ class GeminiGenerator(BaseGenerator):
             request = self.convert_conversation_to_input(conversation)
             response = self.client.generate_content(
                 contents=request,
-                safety_settings=safety_settings
+                safety_settings=safety_settings,
+                generation_config=generation_config
             )
 
             return self.convert_output_to_message(response.text)
