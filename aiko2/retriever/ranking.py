@@ -232,7 +232,9 @@ class BM25Ranker(BaseRanker):
     def rank_results(self, query: Query, results: list[str]) -> list[RankerResult]:
         
         ranked_results = []
-        bm25 = BM25Okapi(results)
+        
+        tokenized_results = [result.split() for result in results]
+        bm25 = BM25Okapi(tokenized_results)
         scores = bm25.get_scores(query.query.split())
         
         for score in scores:

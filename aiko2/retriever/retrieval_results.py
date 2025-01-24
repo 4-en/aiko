@@ -435,7 +435,7 @@ class RetrievalResults:
             n += len(self.results[query_id])
         return n
     
-    def rank_results(self, scoring_method: str = "cosine"):
+    def rank_results(self, scoring_method: str = "bm25"):
         """
         Rank the results based on the scoring method and adjust their scores.
         """
