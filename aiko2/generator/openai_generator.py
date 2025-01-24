@@ -124,6 +124,9 @@ class OpenAIGenerator(BaseGenerator):
         Message
             The message generated.
         """
+        # add this since openai sometimes adds the assistant name to the output
+        if output.startswith(self.assistant.name + ": "):
+            output = output[len(self.assistant.name) + 2:]
         message = Message(output, self.assistant)
         return message
     
