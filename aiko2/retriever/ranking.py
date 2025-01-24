@@ -6,7 +6,7 @@ from rank_bm25 import BM25Okapi
 
 from dataclasses import dataclass
 import numpy as np
-import sentence_transformers
+from sentence_transformers import SentenceTransformer, util
 
 @dataclass
 class RankerResult:
@@ -253,7 +253,7 @@ class CosineRanker(BaseRanker):
     
     def get_embedder():
         if CosineRanker._embedder is None:
-            CosineRanker._embedder = sentence_transformers.SentenceTransformer('all-MiniLM-L6-v2')
+            CosineRanker._embedder = SentenceTransformer('sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
         return CosineRanker._embedder
     
     def rank_results(self, query: Query, results: list[str]) -> list[RankerResult]:
@@ -264,8 +264,10 @@ class CosineRanker(BaseRanker):
         query_embedding = embedder.encode(query.query)
         result_embeddings = embedder.encode(results)
         
-        for result_embedding in result_embeddings:
-            score = np.dot(query_embedding, result_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(result_embedding))
+        # sentence transformer already normalizes the embeddings, so we can use dot product as cosine similarity
+        scores = util.dot_score(query_embedding, result_embeddings)[0].cpu().tolist()
+
+        for score, result_embedding in zip(scores, result_embeddings):
             ranked_results.append(RankerResult(score, result_embedding))
             
         return ranked_results

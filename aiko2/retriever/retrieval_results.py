@@ -3,7 +3,7 @@ import sentence_transformers
 import numpy as np
 import rank_bm25
 from uuid import uuid4
-from aiko2.utils import split_text
+from aiko2.utils import split_text, chunk_text
 
 @dataclass
 class Query:
@@ -132,6 +132,19 @@ class QueryResult:
             return [self]
         
         text_parts = split_text(self.result, max_length)
+        query_parts = [QueryResult(text_part, self.query) for text_part in text_parts]
+        for i, query_part in enumerate(query_parts):
+            query_part.add_parent(self, i)
+            query_part.source = self.source
+            query_part.retriever = self.retriever
+            
+        return query_parts
+    
+    def chunk_result(self, chunk_size: int=700, overlap: int=400) -> list['QueryResult']:
+        if len(self.result) <= chunk_size:
+            return [self]
+        
+        text_parts = chunk_text(self.result, chunk_size, overlap)
         query_parts = [QueryResult(text_part, self.query) for text_part in text_parts]
         for i, query_part in enumerate(query_parts):
             query_part.add_parent(self, i)
@@ -401,9 +414,9 @@ class RetrievalResults:
             The result to add.
         """
         
-        if len(query_result.result) > 500:
+        if len(query_result.result) > 750:
             # Split long results into smaller parts
-            query_parts = query_result.split_result(500)
+            query_parts = query_result.chunk_result()
             for query_part in query_parts:
                 self.add_result(query_part)
             return
@@ -435,7 +448,7 @@ class RetrievalResults:
             n += len(self.results[query_id])
         return n
     
-    def rank_results(self, scoring_method: str = "bm25"):
+    def rank_results(self, scoring_method: str = "cosine"):
         """
         Rank the results based on the scoring method and adjust their scores.
         """

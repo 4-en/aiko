@@ -157,7 +157,9 @@ class WebRetriever(BaseRetriever):
             print(f"\nSearching for: {query.query}...\n")
             try:
                 # get results from search engine
-                search_results = get_search_results_sync(query.query)
+                search_results = get_search_results_sync(query.query, num_results=5, time_filter="all")
+                search_results.extend(get_search_results_sync(query.query, num_results=5, time_filter="month"))
+                search_results = list(set(search_results))  # Remove duplicates
                 # scrape the content from the search results
                 tasks = [scrape_website_sync(url) for url in search_results]
                 scraped_data = [task for task in tasks]
