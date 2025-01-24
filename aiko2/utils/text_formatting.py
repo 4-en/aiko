@@ -1,4 +1,4 @@
-def split_text(self, text:str, max_length=1000) -> list[str]:
+def split_text(text:str, max_length=1000) -> list[str]:
         """
         Split a long text into smaller chunks.
         If possible, try to split the text at logical points (e.g. at the end of a sentence).

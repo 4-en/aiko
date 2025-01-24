@@ -194,16 +194,18 @@ class Pipeline(BasePipeline):
         # We insert the retrieved information before the last message in the conversation,
         # to make it easier for the model to attend to the actual question asked by the user.
         # TODO: Consider adding user question before AND after the retrieved information? This might help the model to extract the correct context.
-        return # TODO: fix this
 
         last_message = conversation.messages[-1]
         conversation.messages = conversation.messages[:-1]
+        
+        query_results = retrieved_info.top_k(3)
 
-        for result in retrieved_info.search_results:
-            query_result = result.results[0] if len(result.results) > 0 else None
-            if query_result:
+        for result in reversed(query_results): # reversed so best results are last
+            query_result = result.result
+            if query_result and len(query_result) > 10:
                 logging.debug(f"Appending query result: {query_result}")
-                message = Message(query_result, User("INNER_MONOLOGUE", Role.ASSISTANT))
+                print(f"Appending query result: {query_result[:100]}... Score: {result.score}")
+                message = Message(query_result, User("INNER_MONOLOGUE", Role.USER))
                 conversation.messages.append(message)
 
         conversation.messages.append(last_message)

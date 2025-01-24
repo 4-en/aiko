@@ -168,6 +168,8 @@ class WebRetriever(BaseRetriever):
                         retrieval_results.add_result(query_result)
             except Exception as e:
                 print(f"Failed to retrieve search results: {e}")
+                import traceback
+                traceback.print_exc()
 
         return retrieval_results
     

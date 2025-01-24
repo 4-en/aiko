@@ -18,7 +18,7 @@ class BasicDiscordBot(discord.Client):
         self.message_queue: list[tuple[discord.TextChannel, Conversation]] = []
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.conversations: dict[int, Conversation] = {}
-        self.pipeline = Pipeline(GPT4OMiniGenerator(), retriever=WebRetriever(), evaluator=Gemini15Flash8BEvaluator())
+        self.pipeline = Pipeline(Gemini15Flash8B(), retriever=WebRetriever(), evaluator=Gemini15Flash8BEvaluator())
         self.bot_user = User(self.pipeline.config.name, Role.ASSISTANT)
         self._generating = False
     

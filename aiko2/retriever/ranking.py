@@ -1,7 +1,7 @@
 # contains different functions for ranking the retrieval results.
 
 from abc import ABC, abstractmethod
-from . import QueryResult, Query, RetrievalResults
+from aiko2.retriever import QueryResult, Query, RetrievalResults
 from rank_bm25 import BM25Okapi
 
 from dataclasses import dataclass
@@ -78,6 +78,23 @@ class BaseRanker(ABC):
             raise ValueError(f"Ranker for metric {metric} not found.")
         
         return BaseRanker._ranker[metric]
+    
+    @staticmethod
+    def has_ranker(metric: str) -> bool:
+        """
+        Check if a ranker exists for a metric.
+        
+        Parameters
+        ----------
+        metric : str
+            The metric to check.
+        
+        Returns
+        -------
+        bool
+            True if a ranker exists, False otherwise.
+        """
+        return metric in BaseRanker._ranker
         
     @staticmethod
     def _rank_retrieval_results(retrieval_results: RetrievalResults, metric: str) -> RetrievalResults:
@@ -129,11 +146,13 @@ class BaseRanker(ABC):
                 
         ranked_query_results = []
         for query_results in queries.values():
-            rankings = ranker.rank_results(query_results[0].query, [query_result.content for query_result in query_results])
+            rankings = ranker.rank_results(query_results[0].query, [query_result.result for query_result in query_results])
             for query_result, ranking in zip(query_results, rankings):
-                query_result.ranker_result = ranking
+                query_result.score = ranking.score
                 if ranking.embedding is not None:
                     query_result.embedding = ranking.embedding
+                    
+                query_result.scoring_method = metric
                 ranked_query_results.append(query_result)
                 
         return ranked_query_results

@@ -364,7 +364,7 @@ class QueryResults:
         ranked_results = sorted(zip(results, similarities), key=lambda x: x[1], reverse=True)
         return ranked_results
     
-@dataclass
+
 class RetrievalResults:
     """
     A class to hold the results of a retrieval operation.
@@ -377,9 +377,19 @@ class RetrievalResults:
     scoring_method: str
         The method used to score the results.
     """
+    
+    ranker = None
+    
+    def __init__(self):
+        if RetrievalResults.ranker is None:
+            from . import BaseRanker
+            RetrievalResults.ranker = BaseRanker
+            
+        self.results: dict[str, QueryResult] = {}
+        self.scoring_method: str | None = None
+        
 
-    results: dict[str, QueryResult] = field(default_factory=dict)
-    scoring_method: str | None = None
+
     
     def add_result(self, query_result: QueryResult):
         """
@@ -390,10 +400,26 @@ class RetrievalResults:
         query_result : QueryResult
             The result to add.
         """
+        
+        if len(query_result.result) > 500:
+            # Split long results into smaller parts
+            query_parts = query_result.split_result(500)
+            for query_part in query_parts:
+                self.add_result(query_part)
+            return
+        
         if query_result.query.query_id not in self.results:
             self.results[query_result.query.query_id] = [ query_result ]
         else:
             self.results[query_result.query.query_id].append(query_result)
+            
+        if self.scoring_method == None and query_result.scoring_method != None and len(self) == 1:
+            self.scoring_method = query_result.scoring_method
+            
+        if query_result.scoring_method != self.scoring_method:
+            self.scoring_method = None
+            
+        
 
     def __len__(self) -> int:
         """
@@ -413,7 +439,24 @@ class RetrievalResults:
         """
         Rank the results based on the scoring method and adjust their scores.
         """
-        pass
+        
+        if not RetrievalResults.ranker.has_ranker(scoring_method):
+            raise ValueError(f"Ranker not found: {scoring_method}")
+        
+        RetrievalResults.ranker.rank(self, scoring_method)
+        self.scoring_method = scoring_method
+        
+    def is_ranked(self) -> bool:
+        """
+        Check if the results are ranked.
+        
+        Returns
+        -------
+        bool
+            True if the results are ranked, False otherwise.
+        """
+        return self.scoring_method is not None
+        
     
     def top_k(self, k: int | None, min_score: float | None=None, query: Query | None=None) -> list[QueryResult]:
         """
@@ -434,6 +477,9 @@ class RetrievalResults:
         List[QueryResult]
             The top k results.
         """
+        
+        if not self.is_ranked():
+            self.rank_results()
         
         results = []
         
