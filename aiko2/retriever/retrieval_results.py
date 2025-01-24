@@ -3,6 +3,7 @@ import sentence_transformers
 import numpy as np
 import rank_bm25
 from uuid import uuid4
+from aiko2.utils import split_text
 
 @dataclass
 class Query:
@@ -40,7 +41,103 @@ class Query:
             return self.query_id == value.query_id
         
         return self.query == value.query and self.topic == value.topic and self.query_type == value.query_type
+ 
+@dataclass
+class QueryResult:
+    """
+    A class to hold a query result.
     
+    Attributes
+    ----------
+    result : str
+        The result string.
+    query : Query
+        The query that generated the result.
+    embedding : np.ndarray | None = None
+        The embedding of the result.
+    score : float | None = None
+        The score of the result compared to the query.
+    scoring_method : str | None = None
+        The method used to score the result.
+        cosine, bm25, etc.
+    source : str | None = None
+        The source of the result. For example, a URL.
+    retriever : str | None = None
+        The retriever that retrieved the result.
+    parent : QueryResult | None = None
+        The parent query result.
+        In case a long result is split into multiple parts.
+    parent_part_index : int | None = None
+        The index of the parent part.
+        Can be used to order the parts and combine them if needed.
+    """
+    
+    result: str
+    query: Query
+    embedding: np.ndarray | None = None
+    score: float | None = None
+    scoring_method: str | None = None
+    source: str | None = None
+    retriever: str | None = None
+    parent: 'QueryResult' | None = None
+    parent_part_index: int | None = None
+    
+    def __eq__(self, value):
+        if not isinstance(value, QueryResult):
+            return False
+        
+        return self.result == value.result and self.query == value.query
+
+    def __hash__(self):
+        return hash((self.result, self.query))
+
+    def __str__(self):
+        return self.result
+    
+    def __repr__(self):
+        return f"QueryResult({self.result}, {self.query})"
+    
+    def __len__(self):
+        return len(self.result)
+    
+    def __getitem__(self, index):
+        return self.result[index]
+    
+    def __iter__(self):
+        return iter(self.result)
+    
+    def add_parent(self, parent: 'QueryResult', part_index: int):
+        """
+        Add a parent to the query result.
+        
+        Parameters
+        ----------
+        parent : QueryResult
+            The parent query result.
+        part_index : int
+            The index of the parent part."""
+        self.parent = parent
+        self.parent_part_index = part_index
+    
+    def add_embedding(self, embedding: np.ndarray):
+        self.embedding = embedding
+    
+    def add_score(self, score: float, method: str):
+        self.score = score
+        self.scoring_method = method
+        
+    def split_result(self, max_length: int) -> list['QueryResult']:
+        if len(self.result) <= max_length:
+            return [self]
+        
+        text_parts = split_text(self.result, max_length)
+        query_parts = [QueryResult(text_part, self.query) for text_part in text_parts]
+        for i, query_part in enumerate(query_parts):
+            query_part.add_parent(self, i)
+            query_part.source = self.source
+            query_part.retriever = self.retriever
+            
+        return query_parts
 
 @dataclass
 class QueryResults:
