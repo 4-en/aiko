@@ -28,6 +28,7 @@ class Query:
     topic: str
     query_type: str
     query_id: str | None = None
+    embedding: np.ndarray | None = None
     
     def __post_init__(self):
         if self.query_id is None:
