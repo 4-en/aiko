@@ -8,6 +8,7 @@ from aiko2.refiner import BaseRefiner
 from aiko2.retriever import BaseRetriever, RetrievalResults
 from aiko2.utils import get_storage_location
 import logging
+import os
 
 class Pipeline(BasePipeline):
     """
@@ -86,6 +87,18 @@ class Pipeline(BasePipeline):
         if self.evaluator:
             self.evaluator._setup(self.config)
         self._system_message = self._generate_system_message()
+        
+    def get_root_dir(self) -> str:
+        """
+        Get the root directory of the pipeline.
+
+        Returns
+        -------
+        str
+            The root directory of the pipeline.
+            (Without trailing slash)
+        """
+        return os.path.abspath(self.root_dir)
         
     def _generate_system_message(self) -> Message:
         """
