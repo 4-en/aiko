@@ -159,6 +159,11 @@ class ConfigClass:
         """
         file_name = file_name or self.__file_name
         
+        # make sure path exists
+        path = os.path.dirname(file_name)
+        if path and not os.path.exists(path):
+            os.makedirs(path)
+        
         with open(file_name, "w") as file:
             for key, value in self.__dict__.items():
                 try:
