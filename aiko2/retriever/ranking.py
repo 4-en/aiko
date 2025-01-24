@@ -2,9 +2,11 @@
 
 from abc import ABC, abstractmethod
 from . import QueryResult, Query, RetrievalResults
+from rank_bm25 import BM25Okapi
 
 from dataclasses import dataclass
 import numpy as np
+import sentence_transformers
 
 @dataclass
 class RankerResult:
@@ -20,7 +22,23 @@ class RankerResult:
     """
     
     score: float
-    embedding: np.array | None = None
+    embedding: np.ndarray | None = None
+    
+def register_ranker(metric: str | list[str]):
+    """
+    Decorator to automatically register a ranker class.
+    """
+    def decorator(cls):
+        instance = cls()  # Instantiate the ranker
+        if isinstance(metric, str):
+            BaseRanker.register_ranker(metric, instance)
+        elif isinstance(metric, list):
+            for m in metric:
+                BaseRanker.register_ranker(m, instance)
+        else:
+            raise ValueError("Invalid metric type. Expected str or list[str].")
+        return cls
+    return decorator
 
 class BaseRanker(ABC):
     
@@ -60,10 +78,6 @@ class BaseRanker(ABC):
             raise ValueError(f"Ranker for metric {metric} not found.")
         
         return BaseRanker._ranker[metric]
-    
-    def __init__(self, metric: str):
-        self.metric = metric
-        BaseRanker.register_ranker(metric, self)
         
     @staticmethod
     def _rank_retrieval_results(retrieval_results: RetrievalResults, metric: str) -> RetrievalResults:
@@ -188,4 +202,50 @@ class BaseRanker(ABC):
             The ranked results in order of input results.
         """
         pass
+    
+
+@register_ranker("bm25")
+class BM25Ranker(BaseRanker):
+    """
+    A ranker using the BM25 algorithm.
+    """
+        
+    def rank_results(self, query: Query, results: list[str]) -> list[RankerResult]:
+        
+        ranked_results = []
+        bm25 = BM25Okapi(results)
+        scores = bm25.get_scores(query.query.split())
+        
+        for score in scores:
+            ranked_results.append(RankerResult(score))
+            
+        return ranked_results
+
+
+@register_ranker("cosine")
+class CosineRanker(BaseRanker):
+    """
+    A ranker using cosine similarity.
+    """
+    
+    _embedder = None
+    
+    def get_embedder():
+        if CosineRanker._embedder is None:
+            CosineRanker._embedder = sentence_transformers.SentenceTransformer('all-MiniLM-L6-v2')
+        return CosineRanker._embedder
+    
+    def rank_results(self, query: Query, results: list[str]) -> list[RankerResult]:
+        
+        ranked_results = []
+        
+        embedder = CosineRanker.get_embedder()
+        query_embedding = embedder.encode(query.query)
+        result_embeddings = embedder.encode(results)
+        
+        for result_embedding in result_embeddings:
+            score = np.dot(query_embedding, result_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(result_embedding))
+            ranked_results.append(RankerResult(score, result_embedding))
+            
+        return ranked_results
         
