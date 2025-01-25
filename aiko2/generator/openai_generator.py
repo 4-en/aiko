@@ -62,10 +62,10 @@ class OpenAIGenerator(BaseGenerator):
         Setup the OpenAI client.
         """
         
-        if self.config is None:
+        if self.get_config() is None:
             raise ValueError("Generator not setup. Config not set.")
         
-        self.assistant = User(self.config.name, Role.ASSISTANT)
+        self.assistant = User(self.get_config_value("name", "Assistant"), Role.ASSISTANT)
         
         # load .env
         load_dotenv()
@@ -144,7 +144,7 @@ class OpenAIGenerator(BaseGenerator):
         Message
             The response generated.
         """
-        if self.config is None:
+        if self.get_config() is None:
             raise ValueError("Generator not setup. Config not set.")
         
         if self.client is None:
@@ -156,8 +156,8 @@ class OpenAIGenerator(BaseGenerator):
             response = self.client.chat.completions.create(
                 model=self.model.value,
                 messages=self.convert_conversation_to_input(conversation),
-                temperature=self.config.temperature,
-                max_completion_tokens=self.config.max_generated_tokens
+                temperature=self.get_config_value("temperature", 0.7),
+                max_completion_tokens=self.get_config_value("max_generated_tokens", 200),
             )
             return self.convert_output_to_message(response.choices[0].message.content)
         except Exception as e:

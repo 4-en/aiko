@@ -83,10 +83,11 @@ class Pipeline(BasePipeline):
         self.config: Config = config or Config().load(self.root_dir+"/config.txt")
         
         # Setup the generator
-        self.generator._setup(self.config)
+        self.generator._set_pipeline(self)
         if self.evaluator:
-            self.evaluator._setup(self.config)
+            self.evaluator._set_pipeline(self)
         self._system_message = self._generate_system_message()
+
         
     def get_root_dir(self) -> str:
         """
@@ -99,6 +100,41 @@ class Pipeline(BasePipeline):
             (Without trailing slash)
         """
         return os.path.abspath(self.root_dir)
+    
+    def get_data_dir(self) -> str:
+        """
+        Get the data directory of the pipeline.
+
+        Returns
+        -------
+        str
+            The data directory of the pipeline.
+            (Without trailing slash)
+        """
+        return os.path.abspath(self.root_dir+"/data")
+    
+    def get_config(self) -> Config:
+        """
+        Get the configuration of the pipeline.
+
+        Returns
+        -------
+        Config
+            The configuration of the pipeline.
+        """
+        return self.config
+    
+    def get_config_dir(self) -> str:
+        """
+        Get the directory of configuration files.
+        The main configuration file is usually stored in the root directory.
+
+        Returns
+        -------
+        str
+            The directory of the configuration file.
+        """
+        return os.path.abspath(self.root_dir+"/config")
         
     def _generate_system_message(self) -> Message:
         """

@@ -1,10 +1,10 @@
 from aiko2.core import Conversation, Message, User, Role
 from dataclasses import dataclass, field
-from aiko2.config import Config
 import typing_extensions as typing
 from aiko2.generator.base_generator import BaseGenerator
 from aiko2.retriever import Query
 import json
+from aiko2.pipeline.pipeline_component import ComponentMixin
 
 class EvaluatorResponse(typing.TypedDict):
     """
@@ -27,7 +27,7 @@ class Evaluation:
     reply_expectation: float = 0.0 # The 'likelihood' of replying to the message, 0.0 to 1.0, with 1.0 being most likely. Somewhat arbitrary, so might want to ignore this.
     
 
-class BaseEvaluator():
+class BaseEvaluator(ComponentMixin):
     """
     Base class for an evaluator.
     An evaluator decides whether to retrieve information or not.
@@ -35,22 +35,14 @@ class BaseEvaluator():
     """
     
     def __init__(self, generator:BaseGenerator):
-        self.config = None
         self.generator = generator
-    
-    def _setup(self, config:Config):
-        """
-        Setup the evaluator.
-        This method is called by the pipeline to setup the evaluator.
 
-        Parameters
-        ----------
-        config : Config
-            The configuration to use for the evaluator.
-        """
-        self.config = config
-        if self.generator != None and not hasattr(self.generator, "config"):
-            self.generator._setup(config)
+    def _set_pipeline(self, pipeline):
+        super()._set_pipeline(pipeline)
+        if self.generator:
+            self.generator._set_pipeline(pipeline)
+    
+
         
     def _create_evaluation(self, conversation:Conversation, json_input:dict) -> Evaluation:
         """
@@ -123,7 +115,7 @@ class BaseEvaluator():
         str
             The instructions for the evaluator.
         """
-        name = self.config.name
+        name = self.get_config_value("name", "Assistant")
         instructions = f"""You are an evaluator for {name}.
         Your task is to decide whether to reply to a chat message or not, based on the conversation context, by generating a probability between 0.0 and 1.0 of replying to the message.
         This number represents how expected it is that the message should be replied to. For example, if {name} is in a conversation with the speaker or the speaker is asking a question, the probability should be higher.
@@ -174,10 +166,10 @@ class BaseEvaluator():
         if self.generator == None:
             raise ValueError("Generator is not set.")
         
-        if self.config == None:
+        if self.get_config() == None:
             raise ValueError("Evaluator not setup. Config not set.")
         
-        input_messages_length = self.config.max_evaluation_input_messages
+        input_messages_length = self.get_config_value("max_evaluation_input_messages", 1)
         if input_messages_length == None or input_messages_length < 1:
             input_messages_length = 1
             

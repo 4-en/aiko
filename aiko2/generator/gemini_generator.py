@@ -68,10 +68,10 @@ class GeminiGenerator(BaseGenerator):
         Setup the Gemini client.
         """
         
-        if self.config is None:
+        if self.get_config() is None:
             raise ValueError("Generator not setup. Config not set.")
         
-        self.assistant = User(self.config.name, Role.ASSISTANT)
+        self.assistant = User(self.get_config_value("name", "Assistant"), Role.ASSISTANT)
         
         # load .env
         load_dotenv()
@@ -144,8 +144,8 @@ class GeminiGenerator(BaseGenerator):
         """
 
         # remove the assistant name from the output in case it was added by the model
-        if output.lower().startswith(self.config.name.lower()+":"):
-            output = output.replace(self.config.name+":", "").strip()
+        if output.lower().startswith(self.get_config_value("name", "Assistant").lower()+":"):
+            output = output.replace(self.get_config_value("name", "Assistant")+":", "").strip()
         message = Message(output, self.assistant)
         return message
     
@@ -163,7 +163,7 @@ class GeminiGenerator(BaseGenerator):
         Message
             The response generated.
         """
-        if self.config is None:
+        if self.get_config() is None:
             raise ValueError("Generator not setup. Config not set.")
         
         if self.client is None:

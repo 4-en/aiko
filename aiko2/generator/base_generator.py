@@ -1,24 +1,13 @@
 from aiko2.core import Conversation, Message, User, Role
 from abc import ABC, abstractmethod
 from aiko2.config import Config
+import aiko2.pipeline.pipeline_component as pipeline_component
 
-class BaseGenerator(ABC):
+class BaseGenerator(ABC, pipeline_component.ComponentMixin):
     """
     Base class for a generator.
     A generator generates a response based on the conversation.
     """
-    
-    def _setup(self, config:Config):
-        """
-        Setup the generator.
-        This method is called by the pipeline to setup the generator.
-
-        Parameters
-        ----------
-        config : Config
-            The configuration to use for the generator.
-        """
-        self.config = config
 
     @abstractmethod
     def generate(self, conversation:Conversation) -> Message:
