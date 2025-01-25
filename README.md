@@ -85,13 +85,15 @@ pip install -r requirements.txt
 
 ## Progress
 - [x] create basic api to reply to messages
-- [ ] integrate api into discord
+- [x] integrate api into discord
 - [x] use openai api for replies (no finetuning)
 - [ ] finetune openai model
 - [ ] integrate web ui
 - [ ] integrate RAG
+- [ ] memory system
 - [ ] train and use local LLM
 - [ ] full character creation using config files
+- [ ] logging for all relevant components to improve future quality
 
 ## Unlikely
 - GUI with Qt
