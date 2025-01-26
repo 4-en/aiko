@@ -58,6 +58,8 @@ class BasicDiscordBot(discord.Client):
     async def on_message(self, message:discord.Message):
         try:
             print(f'Message from {message.author}: {message.content}')
+
+            if message.content == None or message.content == '': return
             
             channel_id = message.channel.id
             user_id = message.author.id
