@@ -88,6 +88,7 @@ class Pipeline(BasePipeline):
         # load environment variables from .env file in root directory
         dotenv_path = self.get_root_dir()+"/.env"
         if not os.path.exists(dotenv_path):
+            print(f"Creating .env file in {self.get_root_dir()}")
             with open(dotenv_path, "w") as f:
                 f.write("# Add environment variables here")
         else:

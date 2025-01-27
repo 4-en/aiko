@@ -2,6 +2,43 @@ from aiko2.core import Conversation, Message, User, Role
 from abc import ABC, abstractmethod
 from aiko2.config import Config
 import aiko2.pipeline.pipeline_component as pipeline_component
+from dataclasses import dataclass, field
+
+@dataclass
+class GeneratorConfig:
+    """
+    A configuration for a generator.
+    This configuration is used to tune various parameters of the generator.
+    
+    Unifies different configurations for different generators.
+    
+    Attributes
+    ----------
+    temperature : float
+        The temperature of the generator.
+    max_tokens : int
+        The maximum number of tokens to generate.
+    top_p : float
+        The nucleus sampling probability.
+    top_k : int
+        The nucleus sampling top-k value.
+    frequency_penalty : float
+        The frequency penalty.
+    presence_penalty : float
+        The presence penalty.
+    stop : List[str]
+        A list of stop words.
+    """
+    
+    temperature: float = 0.7
+    max_tokens: int = 1000
+    top_p: float = 0.9
+    top_k: int = 50
+    frequency_penalty: float = 0.0
+    presence_penalty: float = 0.0
+    stop: list[str] = field(default_factory=lambda: [])
+    
+    
 
 class BaseGenerator(ABC, pipeline_component.ComponentMixin):
     """

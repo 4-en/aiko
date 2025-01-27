@@ -58,9 +58,8 @@ class GeminiGenerator(BaseGenerator):
         self._last_instruction = None
 
         self.generation_config = genai.GenerationConfig(
-            temperature=1.1,
+            temperature=1.3,
             top_k=40,
-            top_p=0.9,
         )
         
     def _setup_client(self):
