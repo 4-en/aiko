@@ -9,6 +9,7 @@ from aiko2.retriever import BaseRetriever, RetrievalResults
 from aiko2.utils import get_storage_location
 import logging
 import os
+from dotenv import load_dotenv
 
 class Pipeline(BasePipeline):
     """
@@ -82,10 +83,21 @@ class Pipeline(BasePipeline):
         self.root_dir = root_dir or get_storage_location("aiko2", create=True)
         self.config: Config = config or Config().load(self.root_dir+"/config.txt")
         
+        print(f"Root dir: {self.get_root_dir()}")
+        
+        # load environment variables from .env file in root directory
+        dotenv_path = self.get_root_dir()+"/.env"
+        if not os.path.exists(dotenv_path):
+            with open(dotenv_path, "w") as f:
+                f.write("# Add environment variables here")
+        else:
+            load_dotenv(self.get_root_dir()+"/.env")
+        
         # Setup the generator
         self.generator._set_pipeline(self)
         if self.evaluator:
             self.evaluator._set_pipeline(self)
+            
         self._system_message = self._generate_system_message()
 
         
