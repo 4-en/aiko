@@ -22,7 +22,7 @@ class VectorDB(ABC):
     
     def __init__(self, path: str, dimension: int, metric: str="cosine"):
         self.path = path
-        if not os.path.exists(path):
+        if path and not os.path.exists(path):
             os.makedirs(path)
         self.dimension = dimension
         self.metric = metric
@@ -100,7 +100,7 @@ class KVStore(ABC):
     
     def __init__(self, path: str):
         self.path = path
-        if not os.path.exists(path):
+        if path and not os.path.exists(path):
             os.makedirs(path)
 
     @abstractmethod
@@ -210,7 +210,9 @@ class KnowledgeBase:
         if path is not None:
             dir_path = os.path.dirname(path)
             self.kvstore.path = os.path.join(dir_path, "kvstore")
+            os.makedirs(self.kvstore.path, exist_ok=True)
             self.vector_db.path = os.path.join(dir_path, "vector_db")
+            os.makedirs(self.vector_db.path, exist_ok=True)
             
     def save(self):
         """
