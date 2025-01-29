@@ -188,9 +188,10 @@ class KnowledgebaseQueryResult:
     value: dict
     vector: np.ndarray
     distance: float
+    domain: str | None = None
 
 import os
-class Knowledgebase:
+class KnowledgeBase:
     """
     A knowledge base for storing and retrieving information.
     Internally, it uses a key-value store to store the information and a vector database
@@ -333,3 +334,132 @@ class Knowledgebase:
         """
         return self.kvstore.get(key)
         
+
+class MultiKnowledgeBase:
+    """
+    A multi-knowledge base for storing and retrieving information.
+    It contains multiple knowledge bases, each with its own domain.
+    The knowledge bases are stored in a dict and can be accessed by their domain name,
+    or all knowledge bases can be queried at once.
+    """
+
+    def __init__(self, path: str=None):
+        self.knowledge_bases = {}
+        self.path = path
+        
+    def add_knowledge_base(self, domain: str, knowledge_base: KnowledgeBase):
+        """
+        Add a knowledge base to the multi-knowledge base.
+        
+        Parameters
+        ----------
+        domain : str
+            The domain of the knowledge base.
+        knowledge_base : KnowledgeBase
+            The knowledge base to add.
+        """
+        self.knowledge_bases[domain] = knowledge_base
+        
+    def save(self):
+        """
+        Save the multi-knowledge base to disk.
+        """
+        for domain, knowledge_base in self.knowledge_bases.items():
+            knowledge_base.save()
+            
+    def load(self):
+        """
+        Load the multi-knowledge base from disk.
+        """
+        for domain, knowledge_base in self.knowledge_bases.items():
+            knowledge_base.load()
+        
+    def insert(self, domain: str, value: dict, vector: np.ndarray, key: str = None):
+        """
+        Insert a key-value pair into the knowledge base for a specific domain.
+        
+        Parameters
+        ----------
+        domain : str
+            The domain of the knowledge base.
+        value : dict
+            The value to insert.
+        vector : np.ndarray
+            The vector associated with the value.
+        key : str, optional
+            The key to insert, by default None
+            If None, a random key will be generated.
+        """
+        knowledge_base = self.knowledge_bases[domain]
+        knowledge_base.insert(value, vector, key)
+        
+    def query(self, vector: np.ndarray, k: int, domain: str = None) -> list[KnowledgebaseQueryResult]:
+        """
+        Query the multi-knowledge base for the most similar values to the given vector.
+        
+        Parameters
+        ----------
+        vector : np.ndarray
+            The vector to query for.
+        k : int
+            The number of most similar values to return.
+        domain : str, optional
+            The domain to query, by default None
+            If None, all knowledge bases will be queried.
+            
+        Returns
+        -------
+        list[KnowledgebaseQueryResult]
+            A list of query results.
+        """
+        query_results = []
+        
+        if domain is None:
+            for domain, knowledge_base in self.knowledge_bases.items():
+                results = knowledge_base.query(vector, k)
+                query_results.extend(results)
+        else:
+            knowledge_base = self.knowledge_bases[domain]
+            query_results = knowledge_base.query(vector, k)
+            
+        return query_results
+        
+    
+    def delete(self, domain: str, key: str) -> bool:
+        """
+        Delete a value from the knowledge base for a specific domain.
+        
+        Parameters
+        ----------
+        domain : str
+            The domain of the knowledge base.
+        key : str
+            The key to delete.
+
+        Returns
+        -------
+        bool
+            True if the key was deleted, False otherwise.
+        """
+
+        knowledge_base = self.knowledge_bases[domain]
+        return knowledge_base.delete(key)
+    
+    def __contains__(self, domain: str, key: str) -> bool:
+        """
+        Check if a key is in the knowledge base for a specific domain.
+        
+        Parameters
+        ----------
+        domain : str
+            The domain of the knowledge base.
+        key : str
+            The key to check.
+        
+        Returns
+        -------
+        bool
+            True if the key is in the knowledge base, False otherwise.
+        """
+        knowledge_base = self.knowledge_bases[domain]
+        return key in knowledge_base
