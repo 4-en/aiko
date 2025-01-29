@@ -69,9 +69,9 @@ class Pipeline(BasePipeline):
         root_dir : str, optional
             The root directory to use for the pipeline.
             If None, the default root directory will be used.
-            - Windows: %APPDATA%/aiko2
-            - Linux: ~/share/aiko2
-            - macOS: ~/Library/Application Support/aiko2
+            - Windows: %APPDATA%/aiko
+            - Linux: ~/share/aiko
+            - macOS: ~/Library/Application Support/aiko
         config : Config, optional
             The configuration to use for the pipeline.
             If None, tries to load the configuration from the root directory.
@@ -80,7 +80,7 @@ class Pipeline(BasePipeline):
         self.evaluator: BaseEvaluator = evaluator
         self.retriever: BaseRetriever = retriever
         self.refiner: BaseRefiner = refiner
-        self.root_dir = root_dir or get_storage_location("aiko2", create=True)
+        self.root_dir = root_dir or get_storage_location("aiko", create=True)
         self.config: Config = config or Config().load(self.root_dir+"/config.txt")
         
         print(f"Root dir: {self.get_root_dir()}")
