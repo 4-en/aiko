@@ -5,19 +5,22 @@ import os
 
 class SimpleJsonStore(KVStore):
     def __init__(self, path):
-        self.path = path
+        super().__init__(path)
         self.data = {}
         self.load()
 
+    def _get_filename(self):
+        return os.path.join(self.path, 'json_store.json')
+
     def load(self):
         try:
-            with open(self.path, 'r') as f:
+            with open(self._get_filename(), 'r') as f:
                 self.data = json.load(f)
         except FileNotFoundError:
             pass
 
     def save(self):
-        with open(self.path, 'w') as f:
+        with open(self._get_filename(), 'w') as f:
             json.dump(self.data, f)
 
     def get(self, key):
@@ -51,7 +54,7 @@ class JsonFileStore(KVStore):
     """
 
     def __init__(self, path):
-        self.path = path
+        super().__init__(path)
         self.cache = LRUCache(maxsize=100)
         self.keys = set()
         self._keys_name = 'keys.txt'

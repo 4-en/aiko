@@ -2,6 +2,7 @@ import numpy as np
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 import uuid
+import os
 
 @dataclass
 class VectorDBQueryResult:
@@ -21,6 +22,8 @@ class VectorDB(ABC):
     
     def __init__(self, path: str, dimension: int, metric: str="cosine"):
         self.path = path
+        if not os.path.exists(path):
+            os.makedirs(path)
         self.dimension = dimension
         self.metric = metric
 
@@ -39,7 +42,7 @@ class VectorDB(ABC):
         pass
     
     @abstractmethod
-    def insert(self, vector: np.ndarray, key: str):
+    def insert(self, key: str, vector: np.ndarray):
         """
         Insert a vector into the database.
         
@@ -97,6 +100,8 @@ class KVStore(ABC):
     
     def __init__(self, path: str):
         self.path = path
+        if not os.path.exists(path):
+            os.makedirs(path)
 
     @abstractmethod
     def save(self):
