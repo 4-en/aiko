@@ -343,9 +343,8 @@ class MultiKnowledgeBase:
     or all knowledge bases can be queried at once.
     """
 
-    def __init__(self, path: str=None):
-        self.knowledge_bases = {}
-        self.path = path
+    def __init__(self, knowledge_bases: dict[str, KnowledgeBase]=None):
+        self.knowledge_bases = knowledge_bases if knowledge_bases is not None else {}
         
     def add_knowledge_base(self, domain: str, knowledge_base: KnowledgeBase):
         """
@@ -359,19 +358,46 @@ class MultiKnowledgeBase:
             The knowledge base to add.
         """
         self.knowledge_bases[domain] = knowledge_base
+
+    def remove_knowledge_base(self, domain: str):
+        """
+        Remove a knowledge base from the multi-knowledge base.
+        
+        Parameters
+        ----------
+        domain : str
+            The domain of the knowledge base to remove.
+        """
+        del self.knowledge_bases[domain]
+
+    def contains_knowledge_base(self, domain: str) -> bool:
+        """
+        Check if a knowledge base is in the multi-knowledge base.
+        
+        Parameters
+        ----------
+        domain : str
+            The domain of the knowledge base to check.
+        
+        Returns
+        -------
+        bool
+            True if the knowledge base is in the multi-knowledge base, False otherwise.
+        """
+        return domain in self.knowledge_bases
         
     def save(self):
         """
         Save the multi-knowledge base to disk.
         """
-        for domain, knowledge_base in self.knowledge_bases.items():
+        for _, knowledge_base in self.knowledge_bases.items():
             knowledge_base.save()
             
     def load(self):
         """
         Load the multi-knowledge base from disk.
         """
-        for domain, knowledge_base in self.knowledge_bases.items():
+        for _, knowledge_base in self.knowledge_bases.items():
             knowledge_base.load()
         
     def insert(self, domain: str, value: dict, vector: np.ndarray, key: str = None):
