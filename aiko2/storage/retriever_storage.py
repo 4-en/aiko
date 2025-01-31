@@ -350,8 +350,64 @@ class MultiKnowledgeBase:
     or all knowledge bases can be queried at once.
     """
 
-    def __init__(self, knowledge_bases: dict[str, KnowledgeBase]=None):
+    def __init__(self, path=None, knowledge_bases: dict[str, KnowledgeBase]=None, vector_db_factory: callable=None, kvstore_factory: callable=None, allow_create: bool=True):
+        """
+        Create a multi-knowledge base.
+        
+        Parameters
+        ----------
+        path : str, optional
+            The path to store the knowledge bases, by default None
+        knowledge_bases : dict[str, KnowledgeBase], optional
+            A dict of knowledge bases, by default None
+        vector_db_factory : callable, optional
+            A factory function for creating vector databases, by default None
+        kvstore_factory : callable, optional
+            A factory function for creating key-value stores, by default None
+        allow_create : bool, optional
+            Whether to allow creating new knowledge bases, by default True
+        """
+        self.path = path
+        self.vector_db_factory = vector_db_factory
+        self.kvstore_factory = kvstore_factory
+        self.allow_create = allow_create
         self.knowledge_bases = knowledge_bases if knowledge_bases is not None else {}
+        
+    def can_create(self) -> bool:
+        """
+        Check if new knowledge bases can be created.
+        
+        Returns
+        -------
+        bool
+            True if new knowledge bases can be created, False otherwise.
+        """
+        return self.allow_create and self.vector_db_factory is not None and self.kvstore_factory is not None and self.path is not None
+    
+    def create_knowledge_base(self, domain: str, dimension: int, metric: str="cosine"):
+        """
+        Create a new knowledge base.
+        
+        Parameters
+        ----------
+        domain : str
+            The domain of the knowledge base.
+        dimension : int
+            The dimension of the vectors.
+        metric : str, optional
+            The metric to use for vector similarity, by default "cosine"
+        """
+        if not self.can_create():
+            raise Exception("Cannot create new knowledge bases")
+        
+        knowledge_base_path = os.path.join(self.path, domain)
+        if not os.path.exists(knowledge_base_path):
+            os.makedirs(knowledge_base_path)
+        vector_db = self.vector_db_factory(os.path.join(knowledge_base_path, "vector_db"), dimension, metric)
+        kvstore = self.kvstore_factory(os.path.join(knowledge_base_path, "kvstore"))
+        
+        knowledge_base = KnowledgeBase(kvstore, vector_db)
+        self.add_knowledge_base(domain, knowledge_base)
         
     def add_knowledge_base(self, domain: str, knowledge_base: KnowledgeBase):
         """
@@ -423,6 +479,9 @@ class MultiKnowledgeBase:
             The key to insert, by default None
             If None, a random key will be generated.
         """
+        if not self.contains_knowledge_base(domain):
+            
+        
         knowledge_base = self.knowledge_bases[domain]
         knowledge_base.insert(value, vector, key)
         
