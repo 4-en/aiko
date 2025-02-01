@@ -1,6 +1,10 @@
 from dotenv import load_dotenv
+from aiko2.tests import kb_test
 
-if __name__ == "__main__":
+
+def main():
+    kb_test.main()
+    return
 
     load_dotenv()
 
@@ -12,3 +16,7 @@ if __name__ == "__main__":
 
     # CLI.run()
     BasicDiscordBot.main()
+
+
+if __name__ == "__main__":
+    main()

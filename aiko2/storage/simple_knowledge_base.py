@@ -2,13 +2,15 @@ from .retriever_storage import KnowledgeBase, MultiKnowledgeBase
 from .nano_vector_store import NanoVectorStore
 from .json_kv_store import SimpleJsonStore
 
+import os
+
 # A simple, pre-built knowledge base that uses NanoVectorStore and SimpleJsonStore
 class SimpleKnowledgeBase(KnowledgeBase):
     
     def __init__(self, path="./", dimension=100):
-        nvs = NanoVectorStore(path, dimension)
-        kv = SimpleJsonStore(path)
-        super().__init__(nvs, kv, path)
+        nvs = NanoVectorStore(os.path.join(path, "vectors"), dimension)
+        kv = SimpleJsonStore(os.path.join(path, "kv"))
+        super().__init__(kv, nvs)
         
 
 def nvs_factory(path, dimension):

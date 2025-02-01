@@ -16,6 +16,7 @@ class NanoVectorStore(VectorDB):
         self.db = NanoVectorDB(dimension, storage_file=os.path.join(path, 'vectors.json'))
 
     def save(self):
+        self.db.storage_file = os.path.join(self.path, 'vectors.json')
         self.db.save()
 
     def load(self):
@@ -51,6 +52,6 @@ class NanoVectorStore(VectorDB):
         if nvdb_res:
             results = []
             for res in nvdb_res:
-                results.append(VectorDBQueryResult(res['__vector__']), res['__id__'], res["__metrics__"])
+                results.append(VectorDBQueryResult(None, res['__id__'], res["__metrics__"]))
             return results
         return []

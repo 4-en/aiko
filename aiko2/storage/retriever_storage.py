@@ -74,7 +74,7 @@ class VectorDB(ABC):
         pass
     
     @abstractmethod
-    def query(self, vector: np.array, k: int) -> list[VectorDBQueryResult]:
+    def query(self, vector: np.array, top_k: int=1) -> list[VectorDBQueryResult]:
         """
         Query the database for the most similar vectors to the given vector.
         
@@ -82,8 +82,9 @@ class VectorDB(ABC):
         ----------
         vector : np.array
             The vector to query for.
-        k : int
+        top_k : int
             The number of most similar vectors to return.
+            Default is 1.
         
         Returns
         -------
@@ -257,9 +258,9 @@ class KnowledgeBase:
             key = self._generate_key()
         
         self.kvstore.set(key, value)
-        self.vector_db.insert(vector, {"key": key})
+        self.vector_db.insert(key, vector)
         
-    def query(self, vector: np.ndarray, k: int) -> list[KnowledgebaseQueryResult]:
+    def query(self, vector: np.ndarray, top_k: int=1) -> list[KnowledgebaseQueryResult]:
         """
         Query the knowledge base for the most similar values to the given vector.
         
@@ -267,8 +268,9 @@ class KnowledgeBase:
         ----------
         vector : np.ndarray
             The vector to query for.
-        k : int
+        top_k : int
             The number of most similar values to return.
+            Default is 1.
             
         Returns
         -------
@@ -276,12 +278,12 @@ class KnowledgeBase:
             A list of query results.
         """
         
-        results = self.vector_db.query(vector, k)
+        results = self.vector_db.query(vector, top_k)
         
         query_results = []
         
         for result in results:
-            key = result.data["key"]
+            key = result.key
             value = self.kvstore.get(key)
             query_results.append(KnowledgebaseQueryResult(key, value, result.vector, result.distance))
             
@@ -480,7 +482,9 @@ class MultiKnowledgeBase:
             If None, a random key will be generated.
         """
         if not self.contains_knowledge_base(domain):
-            
+            if not self.can_create():
+                raise Exception("Cannot create new knowledge bases")
+            self.create_knowledge_base(domain, vector.shape[0])
         
         knowledge_base = self.knowledge_bases[domain]
         knowledge_base.insert(value, vector, key)
