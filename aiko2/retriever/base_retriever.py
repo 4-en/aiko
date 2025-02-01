@@ -31,3 +31,39 @@ class BaseRetriever(ABC):
             The retrieval context containing the results of the retrieval operation.
         """
         pass
+
+    def insert_string(self, string:str):
+        """
+        Insert a string into the retriever.
+        This may or may not be implemented by the retriever.
+        
+        Parameters
+        ----------
+        string : str
+            The string to insert.
+        """
+        raise NotImplementedError
+
+    def insert_file(self, file:str):
+        """
+        Insert a file into the retriever.
+        This may or may not be implemented by the retriever.
+        
+        Parameters
+        ----------
+        file : str
+            The file to insert.
+        """
+        raise NotImplementedError
+
+    def insert_directory(self, directory:str):
+        """
+        Insert a directory into the retriever.
+        This may or may not be implemented by the retriever.
+        
+        Parameters
+        ----------
+        directory : str
+            The directory to insert.
+        """
+        raise NotImplementedError
