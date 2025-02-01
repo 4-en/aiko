@@ -14,6 +14,16 @@ class EvaluatorResponse(typing.TypedDict):
     context: list[str]
 
 @dataclass
+class Memory:
+    """
+    A class to represent a memory.
+    This can include personal information about a person or general knowledge.
+    """
+    memory: str # The memory to store
+    person: str # The person the memory is about
+    topic: str # The topic of the memory
+
+@dataclass
 class Evaluation:
     """
     A class to represent the evaluation of a conversation.
@@ -23,7 +33,7 @@ class Evaluation:
     evaluation_input: Conversation # The conversation to evaluate
     queries: list[Query] = field(default_factory=list) # Queries for information retrieval, may be empty
     context: list[str] = field(default_factory=list) # additional context for the conversation, may be empty
-    memories: list[str] = field(default_factory=list) # Memories to store, may be empty
+    memories: list[Memory] = field(default_factory=list) # Memories to store, may be empty
     reply_expectation: float = 0.0 # The 'likelihood' of replying to the message, 0.0 to 1.0, with 1.0 being most likely. Somewhat arbitrary, so might want to ignore this.
     
 
@@ -92,7 +102,7 @@ class BaseEvaluator(ComponentMixin):
             if memory_str == "" or person == "" or topic == "":
                 continue
             
-            memories_response.append(memory)
+            memories_response.append(Memory(memory_str, person, topic))
             
         context_response = [] # TODO: add context to evaluation
             

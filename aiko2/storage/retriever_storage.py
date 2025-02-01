@@ -12,7 +12,7 @@ class VectorDBQueryResult:
     
     vector: np.ndarray
     key: str
-    distance: float
+    score: float
     
 
 class VectorDB(ABC):
@@ -193,7 +193,7 @@ class KnowledgebaseQueryResult:
     key: str
     value: dict
     vector: np.ndarray
-    distance: float
+    score: float
     domain: str | None = None
 
 import os
@@ -285,7 +285,7 @@ class KnowledgeBase:
         for result in results:
             key = result.key
             value = self.kvstore.get(key)
-            query_results.append(KnowledgebaseQueryResult(key, value, result.vector, result.distance))
+            query_results.append(KnowledgebaseQueryResult(key, value, result.vector, result.score))
             
         return query_results
     
@@ -388,7 +388,7 @@ class MultiKnowledgeBase:
     
     def create_knowledge_base(self, domain: str, dimension: int, metric: str="cosine"):
         """
-        Create a new knowledge base.
+        Create a new knowledge base or tries to load an existing one by domain.
         
         Parameters
         ----------
@@ -406,7 +406,9 @@ class MultiKnowledgeBase:
         if not os.path.exists(knowledge_base_path):
             os.makedirs(knowledge_base_path)
         vector_db = self.vector_db_factory(os.path.join(knowledge_base_path, "vector_db"), dimension, metric)
+        vector_db.load()
         kvstore = self.kvstore_factory(os.path.join(knowledge_base_path, "kvstore"))
+        kvstore.load()
         
         knowledge_base = KnowledgeBase(kvstore, vector_db)
         self.add_knowledge_base(domain, knowledge_base)
@@ -433,6 +435,7 @@ class MultiKnowledgeBase:
         domain : str
             The domain of the knowledge base to remove.
         """
+        self.knowledge_bases[domain].save()
         del self.knowledge_bases[domain]
 
     def contains_knowledge_base(self, domain: str) -> bool:
@@ -515,6 +518,11 @@ class MultiKnowledgeBase:
                 results = knowledge_base.query(vector, k)
                 query_results.extend(results)
         else:
+            if not self.contains_knowledge_base(domain):
+                if self.can_create():
+                    self.create_knowledge_base(domain, vector.shape[0])
+                else:
+                    return []
             knowledge_base = self.knowledge_bases[domain]
             query_results = knowledge_base.query(vector, k)
             

@@ -5,7 +5,7 @@ from aiko2.config import Config
 from aiko2.evaluator import BaseEvaluator
 from aiko2.generator import BaseGenerator
 from aiko2.refiner import BaseRefiner
-from aiko2.retriever import BaseRetriever, RetrievalResults
+from aiko2.retriever import BaseRetriever, RetrievalResults, MemoryRetriever
 from aiko2.utils import get_storage_location
 import logging
 import os
@@ -195,6 +195,7 @@ class Pipeline(BasePipeline):
         # Evaluate the conversation
         queries = []
         evaluator_context = []
+        memories = []
         if self.evaluator:
             evaluation = self.evaluator.evaluate(conversation)
             queries = evaluation.queries
@@ -212,7 +213,13 @@ class Pipeline(BasePipeline):
                 
                 # also take into consideration meta data of conversation, like users, timestamps, private/group chat, etc.
                 return None
-            
+
+
+        # add memories
+        if len(memories) > 0 and self.retriever:
+            if isinstance(self.retriever, MemoryRetriever):
+                for memory in memories:
+                    self.retriever.add_memory(memory)
             
         
         # Retrieve information
