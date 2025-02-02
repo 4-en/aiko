@@ -7,7 +7,7 @@ from aiko2.pipeline import Pipeline
 from aiko2.generator import OpenAIGenerator, Gemini15Flash8B, GPT4OMiniGenerator
 from aiko2.retriever import WebRetriever, MemoryRetriever, RetrievalRouter, query_type_routing_function, negated_routing_function, QueryType
 from aiko2.evaluator import Gemini15Flash8BEvaluator
-from aiko2.utils import split_text
+from aiko2.utils import split_text, Memory
 import traceback
 import asyncio
 
@@ -26,6 +26,8 @@ class BasicDiscordBot(discord.Client):
         self.pipeline = Pipeline(Gemini15Flash8B(), retriever=router, evaluator=Gemini15Flash8BEvaluator(), memory_handler=memory_retriever)
         self.bot_user = User(self.pipeline.config.name, Role.ASSISTANT)
         self._generating = False
+
+        self.channel_blacklist = set()
     
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
@@ -58,6 +60,59 @@ class BasicDiscordBot(discord.Client):
             channel, conv = self.message_queue.pop(-1)
             self.message_queue = []
             await self._generate_reply(channel, conv)
+
+    async def execute_command(self, message:discord.Message):
+        # very basic command to test functions
+
+        if message.content.startswith('!clear'):
+            channel_id = message.channel.id
+            self.conversations[channel_id] = Conversation()
+            await message.channel.send('Conversation cleared.')
+            return
+        
+        if message.content.startswith('!save'):
+            print('Saving pipeline...')
+            self.pipeline.save()
+            await message.channel.send('Pipeline saved.')
+            return
+        
+        if message.content.startswith('!add_memory'):
+            memory = message.content.replace('!add_memory', '').strip()
+            splits = memory.split(':', maxsplit=1)
+            if len(splits) != 2:
+                await message.channel.send('Invalid memory format. Use !add_memory <person>:<memory>')
+                return
+            person, memory = splits
+            mem = Memory(person=person, memory=memory, topic=None)
+            self.pipeline.memory_handler.add_memory(mem, person)
+            await message.channel.send(f'Memory added for {person}.')
+            return
+        
+        if message.content.startswith('!toggle'):
+            # toggle replies for this channel
+            channel_id = message.channel.id
+            if channel_id in self.channel_blacklist:
+                self.channel_blacklist.remove(channel_id)
+                await message.channel.send('Replies enabled.')
+            else:
+                self.channel_blacklist.add(channel_id)
+                await message.channel.send('Replies disabled.')
+            return
+        
+        if message.content.startswith('!help'):
+            help_text = """
+            **Available commands:**
+            **!clear** - *Clear the conversation*
+            **!save** - *Saves memories to disk*
+            **!add_memory** <person>:<memory> - *Add a memory*
+            **!toggle** - *Toggle replies on/off*
+            **!help** - *Show this help*
+            """
+            embed = discord.Embed(title="Help", description=help_text, color=0x00ff00)
+            await message.channel.send(embed=embed)
+            return
+
+        
         
 
     async def on_message(self, message:discord.Message):
@@ -66,12 +121,17 @@ class BasicDiscordBot(discord.Client):
 
             if message.content == None or message.content == '': return
 
-            if message.content.startswith('!save'):
-                print('Saving pipeline...')
-                self.pipeline.save()
+            if message.content.startswith('!'):
+                await self.execute_command(message)
                 return
             
+
+            
             channel_id = message.channel.id
+
+            if channel_id in self.channel_blacklist:
+                return
+
             user_id = message.author.id
             
             conversation = self.conversations.get(channel_id, Conversation())
