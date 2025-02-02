@@ -18,8 +18,19 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
     A retriever with a dynamic memory that can be updated using results from the evaluator.
     """
     
-    def __init__(self):
+    def __init__(self, storage_name:str="memory"):
+        """
+        Initialize the memory retriever.
+        
+        Parameters
+        ----------
+        storage_name : str, optional
+            The name of the storage, by default "memory"
+        """
+
         self.knowledge_base = None
+        self.embedder = None
+        self.storage_name = storage_name
     
 
     def save(self):
@@ -41,7 +52,7 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
         
         # base path
         base_path = self.get_root_dir()
-        memory_path = os.path.join(base_path, "memory")
+        memory_path = os.path.join(base_path, self.storage_name)
         self.knowledge_base = SimpleMultiKnowledgeBase(memory_path, 384)
         self.embedder = BaseRanker.get_ranker("cosine")._embedder
         if self.embedder is None:
