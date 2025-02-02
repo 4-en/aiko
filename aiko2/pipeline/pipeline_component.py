@@ -1,5 +1,50 @@
 # from .pipeline import Pipeline, BasePipeline
 from aiko2.config import Config
+from abc import ABC, abstractmethod
+from aiko2.evaluator import Memory
+
+class MemoryHandler(ABC):
+    """
+    An abstract class that defines the interface for memory handlers.
+    Memory handlers are used to store data from components that can be used for future training or analysis.
+    """
+
+    @abstractmethod
+    def add_memory(self, memory: Memory, domain: str):
+        """
+        Add memory to the memory handler.
+
+        Parameters
+        ----------
+        memory : Memory
+            The memory object
+        domain : str
+            The domain of the memory
+            This is used to group memories together, for example for different
+            users. When retrieving memories, you can specify the domain to
+            retrieve memories from, or you can retrieve all memories.
+
+        """
+        pass
+
+    def save(self):
+        """
+        Save the memory handler before shutting down the pipeline.
+        """
+        pass
+
+    def _set_pipeline(self, pipeline):
+        """
+        Set the pipeline object.
+
+        This method is called by the pipeline object to set itself
+
+        Parameters
+        ----------
+        pipeline : Pipeline
+            The pipeline object
+        """
+        pass
 
 class ComponentMixin:
     """
@@ -159,4 +204,6 @@ class LoggingMixin:
         with open(os.path.join(self.get_root_dir(), filename), 'w') as f:
             for data in self._log:
                 f.write(str(data) + '\n')
+
+
 

@@ -1,11 +1,12 @@
 from .base_pipeline import BasePipeline
+from .pipeline_component import MemoryHandler, ComponentMixin
 from aiko2.core import Conversation, Message, User, Role
 from aiko2.config import Config
 
-from aiko2.evaluator import BaseEvaluator
+from aiko2.evaluator import BaseEvaluator, Memory
 from aiko2.generator import BaseGenerator
 from aiko2.refiner import BaseRefiner
-from aiko2.retriever import BaseRetriever, RetrievalResults, MemoryRetriever
+from aiko2.retriever import BaseRetriever, RetrievalResults
 from aiko2.utils import get_storage_location
 import logging
 import os
@@ -25,6 +26,7 @@ class Pipeline(BasePipeline):
             evaluator: BaseEvaluator=None, 
             retriever: BaseRetriever=None,
             refiner: BaseRefiner=None,
+            memory_handler: MemoryHandler=None,
             root_dir: str=None,
             config: Config=None
         ) -> None:   
@@ -80,6 +82,7 @@ class Pipeline(BasePipeline):
         self.evaluator: BaseEvaluator = evaluator
         self.retriever: BaseRetriever = retriever
         self.refiner: BaseRefiner = refiner
+        self.memory_handler: MemoryHandler = memory_handler
         self.root_dir = root_dir or get_storage_location("aiko", create=True)
         self.config: Config = config or Config().load(self.root_dir+"/config.txt")
         
@@ -96,10 +99,41 @@ class Pipeline(BasePipeline):
         
         # Setup the generator
         self.generator._set_pipeline(self)
+
         if self.evaluator:
             self.evaluator._set_pipeline(self)
+        
+        if self.memory_handler:
+            self.memory_handler._set_pipeline(self)
             
         self._system_message = self._generate_system_message()
+
+    def save(self) -> None:
+        """
+        Save the pipeline.
+        This method can be used to save pipeline components to disk.
+        """
+        
+        if self.memory_handler:
+            self.memory_handler.save()
+        
+        self.config.save(self.root_dir+"/config.txt")
+
+    def _add_memories(self, memories: list[Memory], domain: str=None) -> None:
+        """
+        Add memories to the memory handler.
+
+        Parameters
+        ----------
+        memories : list[Memory]
+            The memories to add.
+        domain : str, optional
+            The domain to add the memories to.
+            If None, the memories will be added to the default domain.
+        """
+        if self.memory_handler:
+            for memory in memories:
+                self.memory_handler.add_memory(memory, domain)
 
         
     def get_root_dir(self) -> str:
@@ -216,10 +250,8 @@ class Pipeline(BasePipeline):
 
 
         # add memories
-        if len(memories) > 0 and self.retriever:
-            if isinstance(self.retriever, MemoryRetriever):
-                for memory in memories:
-                    self.retriever.add_memory(memory)
+        if len(memories) > 0:
+            self._add_memories(memories)
             
         
         # Retrieve information

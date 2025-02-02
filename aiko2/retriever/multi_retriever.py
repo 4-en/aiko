@@ -9,7 +9,7 @@ class MultiRetriever(BaseRetriever):
     deduplicated and reranked.
     """
     
-    def __init__(self, retrievers: list[BaseRetriever] = []):
+    def __init__(self, *retrievers: BaseRetriever):
         """
         Initialize the multi retriever.
         
@@ -18,7 +18,9 @@ class MultiRetriever(BaseRetriever):
         retrievers : List[BaseRetriever]
             A list of retrievers to use to retrieve information.
         """
-        self.retrievers = retrievers
+        self.retrievers = []
+        if retrievers:
+            self.retrievers = retrievers
         
     def _merge_results(self, results: list[RetrievalResults]) -> RetrievalResults:
         """
@@ -35,19 +37,13 @@ class MultiRetriever(BaseRetriever):
             The merged retrieval results.
         """
         # Merge the results
-        merged_results = RetrievalResults()
-        query_results = {}
-        for result in results:
-            for query_result in result.query_results:
-                if query_result.query in query_results:
-                    query_results[query_result.query].extend(query_result)
-                else:
-                    query_results[query_result.query] = query_result
+        if len(results) == 0:
+            return RetrievalResults()
         
-        # Add the merged query results to the merged results
-        # TODO: implement RetrievalResults first before continuing here
-        for query_result in query_results.values():
-            merged_results.add_query_result(query_result)
+        merged_results = results[0]
+        for result in results[1:]:
+            merged_results.extend(result)
+
         return merged_results
         
     def retrieve(self, conversation: Conversation, queries: list[str]) -> RetrievalResults:
@@ -73,4 +69,6 @@ class MultiRetriever(BaseRetriever):
             
         # Merge the results
         merged_results = self.merge_results(individual_results)
+
+        return merged_results
     

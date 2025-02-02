@@ -13,7 +13,7 @@ import os
 # using results from the evaluator.
 # Like the base retriever, it also retrieves information based on the queries generated.
 
-class MemoryRetriever(BaseRetriever, pipeline_component.ComponentMixin):
+class MemoryRetriever(BaseRetriever, pipeline_component.ComponentMixin, pipeline_component.MemoryHandler):
     """
     A retriever with a dynamic memory that can be updated using results from the evaluator.
     """
@@ -21,6 +21,10 @@ class MemoryRetriever(BaseRetriever, pipeline_component.ComponentMixin):
     def __init__(self):
         self.knowledge_base = None
     
+
+    def save(self):
+        if self.knowledge_base is not None:
+            self.knowledge_base.save()
 
     def _set_pipeline(self, pipeline):
         """
