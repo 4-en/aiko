@@ -7,7 +7,7 @@ import os
 # A simple, pre-built knowledge base that uses NanoVectorStore and SimpleJsonStore
 class SimpleKnowledgeBase(KnowledgeBase):
     
-    def __init__(self, path="./", dimension=100):
+    def __init__(self, path="./", dimension=384):
         nvs = NanoVectorStore(os.path.join(path, "vectors"), dimension)
         kv = SimpleJsonStore(os.path.join(path, "kv"))
         super().__init__(kv, nvs)
@@ -21,5 +21,5 @@ def kv_factory(path):
 
 class SimpleMultiKnowledgeBase(MultiKnowledgeBase):
     
-    def __init__(self, path="./", dimension=100):
-        super().__init__(path, None, nvs_factory, kv_factory, True)
+    def __init__(self, path="./", dimension=384):
+        super().__init__(path, None, nvs_factory, kv_factory, True, dimension=dimension)

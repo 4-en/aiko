@@ -2,10 +2,10 @@ from .base_retriever import BaseRetriever
 from aiko2.storage import SimpleMultiKnowledgeBase, KnowledgebaseQueryResult
 from .retrieval_results import RetrievalResults, Query, QueryResult
 from aiko2.core import Conversation, Message
-import aiko2.pipeline.pipeline_component as pipeline_component
+import aiko2.utils.pipeline_components as pipeline_components
 from .ranking import BaseRanker
 import sentence_transformers
-from aiko2.evaluator import Memory
+from aiko2.utils import Memory
 
 import os
 
@@ -13,7 +13,7 @@ import os
 # using results from the evaluator.
 # Like the base retriever, it also retrieves information based on the queries generated.
 
-class MemoryRetriever(BaseRetriever, pipeline_component.ComponentMixin, pipeline_component.MemoryHandler):
+class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipeline_components.MemoryHandler):
     """
     A retriever with a dynamic memory that can be updated using results from the evaluator.
     """
@@ -42,7 +42,7 @@ class MemoryRetriever(BaseRetriever, pipeline_component.ComponentMixin, pipeline
         # base path
         base_path = self.get_root_dir()
         memory_path = os.path.join(base_path, "memory")
-        self.knowledge_base = SimpleMultiKnowledgeBase(memory_path, 100)
+        self.knowledge_base = SimpleMultiKnowledgeBase(memory_path, 384)
         self.embedder = BaseRanker.get_ranker("cosine")._embedder
         if self.embedder is None:
             self.embedder = sentence_transformers.SentenceTransformer("sentence-transformers/multi-qa-MiniLM-L6-cos-v1")
@@ -143,8 +143,8 @@ class MemoryRetriever(BaseRetriever, pipeline_component.ComponentMixin, pipeline
 
             for result in results:
                 query_result = QueryResult(
-                    result.content, 
-                    query, 
+                    result=result.value,
+                    query=query,
                     source=result.domain, 
                     retriever=self, 
                     embedding=result.vector, 

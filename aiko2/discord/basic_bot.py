@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from aiko2.core import Conversation, Message, User, Role
 from aiko2.pipeline import Pipeline
 from aiko2.generator import OpenAIGenerator, Gemini15Flash8B, GPT4OMiniGenerator
-from aiko2.retriever import WebRetriever
+from aiko2.retriever import WebRetriever, MemoryRetriever
 from aiko2.evaluator import Gemini15Flash8BEvaluator
 from aiko2.utils import split_text
 import traceback
@@ -18,7 +18,8 @@ class BasicDiscordBot(discord.Client):
         self.message_queue: list[tuple[discord.TextChannel, Conversation]] = []
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.conversations: dict[int, Conversation] = {}
-        self.pipeline = Pipeline(Gemini15Flash8B(), retriever=WebRetriever(), evaluator=Gemini15Flash8BEvaluator())
+        memory_retriever = MemoryRetriever()
+        self.pipeline = Pipeline(Gemini15Flash8B(), retriever=memory_retriever, evaluator=Gemini15Flash8BEvaluator(), memory_handler=memory_retriever)
         self.bot_user = User(self.pipeline.config.name, Role.ASSISTANT)
         self._generating = False
     
@@ -60,6 +61,11 @@ class BasicDiscordBot(discord.Client):
             print(f'Message from {message.author}: {message.content}')
 
             if message.content == None or message.content == '': return
+
+            if message.content.startswith('!save'):
+                print('Saving pipeline...')
+                self.pipeline.save()
+                return
             
             channel_id = message.channel.id
             user_id = message.author.id

@@ -1,13 +1,13 @@
 from .base_pipeline import BasePipeline
-from .pipeline_component import MemoryHandler, ComponentMixin
+from aiko2.utils.pipeline_components import MemoryHandler
 from aiko2.core import Conversation, Message, User, Role
 from aiko2.config import Config
 
-from aiko2.evaluator import BaseEvaluator, Memory
+from aiko2.evaluator import BaseEvaluator
 from aiko2.generator import BaseGenerator
 from aiko2.refiner import BaseRefiner
 from aiko2.retriever import BaseRetriever, RetrievalResults
-from aiko2.utils import get_storage_location
+from aiko2.utils import get_storage_location, Memory
 import logging
 import os
 from dotenv import load_dotenv
@@ -133,6 +133,8 @@ class Pipeline(BasePipeline):
         """
         if self.memory_handler:
             for memory in memories:
+                memory_str = memory.memory
+                print(f"Adding memory: {memory_str}")
                 self.memory_handler.add_memory(memory, domain)
 
         
@@ -256,8 +258,9 @@ class Pipeline(BasePipeline):
         
         # Retrieve information
         if len(queries) > 0 and self.retriever:
-            queries = [query for query in queries if query and query.query_type != "PERSONAL"]
+            # queries = [query for query in queries if query and query.query_type != "PERSONAL"]
             # TODO: make better use of meta data
+            print(f"Retrieving information for queries: {queries}")
             retrieved_info = self.retriever.retrieve(conversation, queries)
             if len(retrieved_info) > 0:
                 self._append_retrieval_results(conversation, retrieved_info)

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from .user import User
 from time import time
 from uuid import uuid4
-from aiko2.utils import estimate_tokens
+from aiko2.utils.estimate_tokens import estimate_tokens
 
 @dataclass
 class Message:

@@ -1,7 +1,7 @@
 from aiko2.core import Conversation, Message, User, Role
 from abc import ABC, abstractmethod
 from aiko2.config import Config
-import aiko2.pipeline.pipeline_component as pipeline_component
+import aiko2.utils.pipeline_components as pipeline_components
 from dataclasses import dataclass, field
 
 @dataclass
@@ -40,7 +40,7 @@ class GeneratorConfig:
     
     
 
-class BaseGenerator(ABC, pipeline_component.ComponentMixin):
+class BaseGenerator(ABC, pipeline_components.ComponentMixin):
     """
     Base class for a generator.
     A generator generates a response based on the conversation.

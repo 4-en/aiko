@@ -352,7 +352,7 @@ class MultiKnowledgeBase:
     or all knowledge bases can be queried at once.
     """
 
-    def __init__(self, path=None, knowledge_bases: dict[str, KnowledgeBase]=None, vector_db_factory: callable=None, kvstore_factory: callable=None, allow_create: bool=True):
+    def __init__(self, path=None, knowledge_bases: dict[str, KnowledgeBase]=None, vector_db_factory: callable=None, kvstore_factory: callable=None, allow_create: bool=True, dimension: int=None):
         """
         Create a multi-knowledge base.
         
@@ -374,6 +374,10 @@ class MultiKnowledgeBase:
         self.kvstore_factory = kvstore_factory
         self.allow_create = allow_create
         self.knowledge_bases = knowledge_bases if knowledge_bases is not None else {}
+        self.dimension = dimension
+
+        if self.path is not None:
+            self.load_all_domains()
         
     def can_create(self) -> bool:
         """
@@ -385,6 +389,33 @@ class MultiKnowledgeBase:
             True if new knowledge bases can be created, False otherwise.
         """
         return self.allow_create and self.vector_db_factory is not None and self.kvstore_factory is not None and self.path is not None
+    
+    def load_all_domains(self):
+        """
+        Load all knowledge bases from subdirectories in the path.
+        """
+
+        if self.dimension is None:
+            # cannot load knowledge bases without dimension
+            return
+
+        if not os.path.exists(self.path):
+            return
+        
+        def is_db_dir(dir):
+            return os.path.isdir(dir) and os.path.exists(os.path.join(dir, "vector_db")) and os.path.exists(os.path.join(dir, "kvstore"))
+
+        for domain in os.listdir(self.path):
+            domain_path = os.path.join(self.path, domain)
+            if is_db_dir(domain_path):
+                vector_db = self.vector_db_factory(os.path.join(domain_path, "vector_db"), self.dimension)
+                vector_db.load()
+                kvstore = self.kvstore_factory(os.path.join(domain_path, "kvstore"))
+                kvstore.load()
+                knowledge_base = KnowledgeBase(kvstore, vector_db)
+                self.add_knowledge_base(domain, knowledge_base)
+
+                print(f"Loaded knowledge base for domain {domain}")
     
     def create_knowledge_base(self, domain: str, dimension: int, metric: str="cosine"):
         """
@@ -405,7 +436,7 @@ class MultiKnowledgeBase:
         knowledge_base_path = os.path.join(self.path, domain)
         if not os.path.exists(knowledge_base_path):
             os.makedirs(knowledge_base_path)
-        vector_db = self.vector_db_factory(os.path.join(knowledge_base_path, "vector_db"), dimension, metric)
+        vector_db = self.vector_db_factory(os.path.join(knowledge_base_path, "vector_db"), dimension)
         vector_db.load()
         kvstore = self.kvstore_factory(os.path.join(knowledge_base_path, "kvstore"))
         kvstore.load()

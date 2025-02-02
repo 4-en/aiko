@@ -3,8 +3,7 @@ from aiko2.tests import kb_test
 
 
 def main():
-    kb_test.main()
-    return
+    #kb_test.main()
 
     load_dotenv()
 
