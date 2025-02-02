@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from aiko2.core import Conversation, Message, User, Role
 from aiko2.pipeline import Pipeline
 from aiko2.generator import OpenAIGenerator, Gemini15Flash8B, GPT4OMiniGenerator
-from aiko2.retriever import WebRetriever, MemoryRetriever
+from aiko2.retriever import WebRetriever, MemoryRetriever, RetrievalRouter, query_type_routing_function, negated_routing_function, QueryType
 from aiko2.evaluator import Gemini15Flash8BEvaluator
 from aiko2.utils import split_text
 import traceback
@@ -19,7 +19,11 @@ class BasicDiscordBot(discord.Client):
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.conversations: dict[int, Conversation] = {}
         memory_retriever = MemoryRetriever()
-        self.pipeline = Pipeline(Gemini15Flash8B(), retriever=memory_retriever, evaluator=Gemini15Flash8BEvaluator(), memory_handler=memory_retriever)
+        web_retriever = WebRetriever()
+        router = RetrievalRouter()
+        router.add_retriever(memory_retriever)
+        router.add_retriever(web_retriever, negated_routing_function(query_type_routing_function([QueryType.PERSONAL]))) # only use web retriever for non-personal queries
+        self.pipeline = Pipeline(Gemini15Flash8B(), retriever=router, evaluator=Gemini15Flash8BEvaluator(), memory_handler=memory_retriever)
         self.bot_user = User(self.pipeline.config.name, Role.ASSISTANT)
         self._generating = False
     

@@ -54,6 +54,25 @@ def domain_routing_function(domains: list[str] | str) -> RoutingScoreFunction:
 
     return score_function
 
+def negated_routing_function(score_function: RoutingScoreFunction) -> RoutingScoreFunction:
+    """
+    Create a routing function that negates the score of another routing function.
+
+    Parameters
+    ----------
+    score_function : RoutingScoreFunction
+        The score function to negate.
+
+    Returns
+    -------
+    RoutingScoreFunction
+        A function that negates the score of the input score function.
+    """
+    def negated_score_function(domain, query):
+        return 1.0 - score_function(domain, query)
+
+    return negated_score_function
+
 def query_type_routing_function(query_types: list[QueryType] | QueryType) -> RoutingScoreFunction:
     """
     Create a routing function that routes queries to retrievers based on the query type.
@@ -137,7 +156,7 @@ class RetrievalRouter(BaseRetriever, pipeline_components.ComponentMixin):
         self.max_results = -1 # maximum number of results to return
         self.custom_filters = [] # custom filters to filter the results
 
-    def add_retriever(self, retriever: BaseRetriever, score_function: RoutingScoreFunction):
+    def add_retriever(self, retriever: BaseRetriever, score_function: RoutingScoreFunction=None):
         """
         Add a retriever to the router.
 
@@ -145,9 +164,15 @@ class RetrievalRouter(BaseRetriever, pipeline_components.ComponentMixin):
         ----------
         retriever : BaseRetriever
             The retriever to add.
-        score_function : RoutingScoreFunction
+        score_function : RoutingScoreFunction, optional
             The score function that scores the query based on the domain and the query.
+            If None, the query will always be routed to the retriever, by default None.
         """
+
+        if score_function is None:
+            # always route the query to the retriever by default
+            score_function = lambda domain, query: 1.0
+
         self.retrievers.append((retriever, score_function))
 
         return self
