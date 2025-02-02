@@ -126,6 +126,8 @@ class BaseEvaluator(ComponentMixin):
         Then, decide whether it is necessary to retrieve external information to reply to the message, by generating up to 3 queries to retrieve information.
         When asking about a specific person, including {name}, use the third person and their name. The questions can be about general information or about more personal information.
         Even if the user didn't directly ask a question, you can still generate queries to retrieve information if it could help in replying to the message.
+        You should generate questions about both {name} and any other people or topics relevant to the conversation and to the next reply.
+        For example, if person A asks person B if they like pizza, you could generate this query: "Does person B like pizza?" and "What food does person B like?".
         
         Your other task is to decide if any content of the message should be memorized. Content that should be memorized is anything personal, either about yourself or another person.
         This includes statements, plans, interests, appearances and more. You can see it as storing information about something.
