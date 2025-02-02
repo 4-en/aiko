@@ -233,12 +233,14 @@ class RetrievalRouter(BaseRetriever, pipeline_components.ComponentMixin):
             if isinstance(retriever, pipeline_components.ComponentMixin):
                 retriever._set_pipeline(pipeline)
 
-    def _route_query(self, query: Query, domain: str) -> list[RetrievalResults]:
+    def _route_query(self, conversation: Conversation, query: Query, domain: str) -> list[RetrievalResults]:
         """
         Route a query to the retrievers based on the domain and the query.
 
         Parameters
         ----------
+        conversation : Conversation
+            The conversation to retrieve information for.
         query : Query
             The query to route.
         domain : str
@@ -268,7 +270,7 @@ class RetrievalRouter(BaseRetriever, pipeline_components.ComponentMixin):
         # route the query to the retrievers
         results = []
         for retriever, _ in sorted_retrievers:
-            results.append(retriever.retrieve(query.conversation, [query], domain))
+            results.append(retriever.retrieve(conversation, [query], domain))
 
         return results
 
@@ -299,7 +301,7 @@ class RetrievalRouter(BaseRetriever, pipeline_components.ComponentMixin):
         # route the queries to the retrievers
         results = []
         for query in queries:
-            results.extend(self._route_query(query, domain))
+            results.extend(self._route_query(conversation, query, domain))
 
         # merge the results
         if len(results) == 0:
