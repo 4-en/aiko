@@ -175,7 +175,7 @@ class WebRetriever(BaseRetriever):
 
         return retrieval_results
     
-    def retrieve(self, conversation: Conversation, queries: list[Query]) -> RetrievalResults:
+    def retrieve(self, conversation: Conversation, queries: list[Query], domain:str=None) -> RetrievalResults:
         """
         Retrieve information from the web using a query.
         

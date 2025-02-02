@@ -4,6 +4,37 @@ import numpy as np
 import rank_bm25
 from uuid import uuid4
 from aiko2.utils import split_text, chunk_text
+from enum import Enum
+
+class QueryType(Enum):
+    GENERAL = 'GENERAL'
+    PERSONAL = 'PERSONAL'
+    NEWS = 'NEWS'
+    RESEARCH = 'RESEARCH'
+    OTHER = 'OTHER'
+
+    def __str__(self):
+        return self.value
+    
+    def __repr__(self):
+        return self.value
+    
+    @staticmethod
+    def from_string(value: str) -> 'QueryType':
+        lower_value = value.lower()
+        if lower_value == 'general':
+            return QueryType.GENERAL
+        elif lower_value == 'personal':
+            return QueryType.PERSONAL
+        elif lower_value == 'news':
+            return QueryType.NEWS
+        elif lower_value == 'research':
+            return QueryType.RESEARCH
+        elif lower_value == 'other':
+            return QueryType.OTHER
+        else:
+            # Default to other
+            return QueryType.OTHER
 
 @dataclass
 class Query:
@@ -16,17 +47,15 @@ class Query:
         The query string.
     topic : str
         The topic of the query.
-    query_type : str
+    query_type : QueryType
         The type of the query.
-        One of 'GENERAL', 'PERSONAL', 'NEWS', 'RESEARCH', 'OTHER'.
-    
     query_id : str
         The id of the query.
     """
     
     query: str
     topic: str
-    query_type: str
+    query_type: QueryType
     query_id: str | None = None
     embedding: np.ndarray | None = None
     
@@ -469,6 +498,23 @@ class RetrievalResults:
             True if the results are ranked, False otherwise.
         """
         return self.scoring_method is not None
+    
+
+    def purge(self, min_score: float=0.0, max_results: int=None):
+        """
+        Purge the results based on the minimum score and the maximum number of results.
+        
+        Parameters
+        ----------
+        min_score : float, optional
+            The minimum score of the results. The default is 0.0.
+        max_results : int, optional
+            The maximum number of results to keep. The default is None.
+        """
+        top_results = self.top_k(max_results, min_score)
+        self.results = {}
+        for result in top_results:
+            self.add_result(result)
         
     
     def top_k(self, k: int | None, min_score: float | None=None, query: Query | None=None) -> list[QueryResult]:

@@ -6,7 +6,7 @@ from aiko2.config import Config
 from aiko2.evaluator import BaseEvaluator
 from aiko2.generator import BaseGenerator
 from aiko2.refiner import BaseRefiner
-from aiko2.retriever import BaseRetriever, RetrievalResults
+from aiko2.retriever import BaseRetriever, RetrievalResults, QueryType
 from aiko2.utils import get_storage_location, Memory
 import logging
 import os

@@ -2,7 +2,7 @@ from aiko2.core import Conversation, Message, User, Role
 from dataclasses import dataclass, field
 import typing_extensions as typing
 from aiko2.generator.base_generator import BaseGenerator
-from aiko2.retriever import Query
+from aiko2.retriever import Query, QueryType
 import json
 from aiko2.utils import ComponentMixin, Memory
 
@@ -78,6 +78,7 @@ class BaseEvaluator(ComponentMixin):
             query_str = query.get("query", "")
             topic = query.get("topic", "")
             query_type = query.get("type", "GENERAL")
+            query_type = QueryType.from_string(query_type)
             
             if query_str == "" or topic == "":
                 continue
