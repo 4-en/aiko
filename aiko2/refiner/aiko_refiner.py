@@ -1,6 +1,7 @@
 from .base_refiner import BaseRefiner
 from aiko2.core import Conversation, Message
 import re
+import random
 
 class AikoRefiner(BaseRefiner):
     """
@@ -69,6 +70,180 @@ class AikoRefiner(BaseRefiner):
         else:
             # Otherwise, leave the original word unchanged.
             return match.group(0)
+        
+    _keyboard_rows = [
+        "qwertyuiop",
+        "asdfghjkll",
+        "zxcvbnm,.-"
+    ]
+        
+    def apply_spelling_error(self, word:str) -> str:
+        """
+        Apply a spelling error to a word.
+
+        Parameters
+        ----------
+        word : str
+            The word to apply the spelling error to.
+
+        Returns
+        -------
+        str
+            The word with a spelling error applied.
+        """
+        
+        if len(word) < 3:
+            return word
+        
+        # Randomly choose between two types of spelling errors.
+        if random.random() < 0.5:
+            # Swap two random characters in the word.
+            idx1 = random.randint(1, len(word) - 2)
+            idx2 = ( idx1 + 1 ) % len(word)
+            return word[:idx1] + word[idx2] + word[idx1] + word[idx2+1:]
+        else:
+            # replace a character with one close to it on the keyboard
+            idx = random.randint(0, len(word) - 1)
+            row_idx, position = -1, -1
+            for i, row in enumerate(AikoRefiner._keyboard_rows):
+                if word[idx] in row:
+                    row_idx = i
+                    position = row.index(word[idx])
+                    break
+            if row == -1:
+                return word
+            new_row = max(0, min(2, row_idx + random.randint(-1, 1)))
+            new_position = max(0, min(len(AikoRefiner._keyboard_rows[new_row]) - 1, position + random.randint(-1, 1)))
+            new_char = AikoRefiner._keyboard_rows[new_row][new_position]
+            return word[:idx] + new_char + word[idx+1:]
+                
+    def apply_case_error(self, word:str) -> str:
+        """
+        Apply a case error to a word.
+
+        Parameters
+        ----------
+        word : str
+            The word to apply the case error to.
+
+        Returns
+        -------
+        str
+            The word with a case error applied.
+        """
+        
+        # If the first character is uppercase, make it lowercase.
+        if word[0].isupper():
+            return word[0].lower() + word[1:]
+        return word
+    
+    def apply_punctuation_error(self, word:str) -> str:
+        """
+        Apply a punctuation error to a word.
+
+        Parameters
+        ----------
+        word : str
+            The word to apply the punctuation error to.
+
+        Returns
+        -------
+        str
+            The word with a punctuation error applied.
+        """
+        
+        # remove any punctuation from the word
+        punctuation = [".", ",", "!", "?", ":", ";", "'", '"', "-", "_"]
+        for p in punctuation:
+            word = word.replace(p, "")
+        return word
+    
+    def vary_punctuation(self, word:str) -> str:
+        if word.endswith("."):
+            word = word[:-1] + random.choice(["...", "...", "...", "..." "!"])
+        return word
+    
+    def apply_grammar_error(self, word:str) -> str:
+        """
+        Apply a grammar error to a word.
+
+        Parameters
+        ----------
+        word : str
+            The word to apply the grammar error to.
+
+        Returns
+        -------
+        str
+            The word with a grammar error applied.
+        """
+        
+        
+        articles = ["a", "an", "the"]
+        repositions = ["in", "on", "at", "by", "with", "from", "to"]
+        verbs = ["is", "are", "was", "were", "has", "have", "do", "does"]
+        
+        if word in articles:
+            return random.choice(articles)
+        elif word in repositions:
+            return random.choice(repositions)
+        elif word in verbs:
+            return random.choice(verbs)
+        
+        return word
+        
+            
+        
+    def un_refine(self, content:str) -> str:
+        """
+        Introduces spelling and grammar errors into the content, making it feel less AI-generated.
+
+        Parameters
+        ----------
+        content : str
+            The content to un-refine.
+            
+        Returns
+        -------
+        str
+            The un-refined content.
+        """
+        
+        SPELLING_ERROR_CHANCE = 0.02
+        CASE_ERROR_CHANCE = 0.1
+        PUNCTUATION_ERROR_CHANCE = 0.2
+        VARIED_PUNCTUATION_CHANCE = 0.2
+        GRAMMAR_ERROR_CHANCE = 0.02
+        
+
+        # Split the content into words
+        paragraphs = content.split("\n")
+        new_paragraphs = []
+        for paragraph in paragraphs:
+            words = paragraph.split(" ")
+            new_words = []
+            for word in words:
+                if len(word) == 0:
+                    new_words.append(word)
+                    continue
+                # Apply spelling errors
+                if random.random() < SPELLING_ERROR_CHANCE:
+                    word = self.apply_spelling_error(word)
+                # Apply case errors
+                if random.random() < CASE_ERROR_CHANCE:
+                    word = self.apply_case_error(word)
+                # Apply punctuation errors
+                if random.random() < PUNCTUATION_ERROR_CHANCE:
+                    word = self.apply_punctuation_error(word)
+                elif random.random() < VARIED_PUNCTUATION_CHANCE:
+                    word = self.vary_punctuation(word)
+                # Apply grammar errors
+                if random.random() < GRAMMAR_ERROR_CHANCE:
+                    word = self.apply_grammar_error(word)
+                new_words.append(word)
+            new_paragraphs.append(" ".join(new_words))
+        return "\n".join(new_paragraphs)
+        
     
     def refine(self, conversation: Conversation, response: Message) -> Message:
         """
@@ -124,6 +299,9 @@ class AikoRefiner(BaseRefiner):
 
         # Apply the substitutions to create a new, fox-like version of the text.
         new_content = pattern.sub(lambda x: self.replacement_func(x, selected_positions), content)
+        
+        # Apply un-refinement to the content
+        new_content = self.un_refine(new_content)
         
         # Return the refined response
         return Message(new_content, response.user, response.timestamp)

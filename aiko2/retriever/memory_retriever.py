@@ -156,7 +156,7 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
                 query_result = QueryResult(
                     result=result.value,
                     query=query,
-                    source=result.domain + "-" + result.key,
+                    source=result.domain + "-" + result.key if result.domain is not None else result.key,
                     retriever=self, 
                     embedding=result.vector, 
                     score=result.score,

@@ -260,6 +260,13 @@ class KnowledgeBase:
         self.kvstore.set(key, value)
         self.vector_db.insert(key, vector)
         
+    def get_domain_name(self):
+        # get the domain name from the path of kv store
+        # eg if path is /home/user/some_dir/kvstore, return /home/user/some_dir
+        return os.path.dirname(self.kvstore.path)
+        
+        
+        
     def query(self, vector: np.ndarray, top_k: int=1) -> list[KnowledgebaseQueryResult]:
         """
         Query the knowledge base for the most similar values to the given vector.
@@ -285,7 +292,7 @@ class KnowledgeBase:
         for result in results:
             key = result.key
             value = self.kvstore.get(key)
-            query_results.append(KnowledgebaseQueryResult(key, value, result.vector, result.score))
+            query_results.append(KnowledgebaseQueryResult(key, value, result.vector, result.score, self.get_domain_name()))
             
         return query_results
     
@@ -547,6 +554,8 @@ class MultiKnowledgeBase:
         if domain is None:
             for domain, knowledge_base in self.knowledge_bases.items():
                 results = knowledge_base.query(vector, k)
+                for result in results:
+                    result.domain = domain
                 query_results.extend(results)
         else:
             if not self.contains_knowledge_base(domain):
@@ -555,7 +564,10 @@ class MultiKnowledgeBase:
                 else:
                     return []
             knowledge_base = self.knowledge_bases[domain]
-            query_results = knowledge_base.query(vector, k)
+            results = knowledge_base.query(vector, k)
+            for result in results:
+                result.domain = domain
+            query_results.extend(results)
             
         return query_results
         
