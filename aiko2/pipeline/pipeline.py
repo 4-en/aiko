@@ -1,13 +1,13 @@
 from .base_pipeline import BasePipeline
-from aiko2.utils.pipeline_components import MemoryHandler
-from aiko2.core import Conversation, Message, User, Role
+from aiko2.pipeline.pipeline_components import MemoryHandler
+from aiko2.core import Conversation, Message, User, Role, Memory
 from aiko2.config import Config
 
 from aiko2.evaluator import BaseEvaluator
 from aiko2.generator import BaseGenerator
 from aiko2.refiner import BaseRefiner
 from aiko2.retriever import BaseRetriever, RetrievalResults, QueryType
-from aiko2.utils import get_storage_location, Memory
+from aiko2.utils import get_storage_location
 import logging
 import os
 from dotenv import load_dotenv

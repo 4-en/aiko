@@ -1,7 +1,7 @@
 # from .pipeline import Pipeline, BasePipeline
 from aiko2.config import Config
 from abc import ABC, abstractmethod
-from .memory import Memory
+from aiko2.core import Memory
 
 class MemoryHandler(ABC):
     """

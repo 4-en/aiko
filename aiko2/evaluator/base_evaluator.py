@@ -1,10 +1,10 @@
-from aiko2.core import Conversation, Message, User, Role
+from aiko2.core import Conversation, Message, User, Role, Memory
 from dataclasses import dataclass, field
 import typing_extensions as typing
 from aiko2.generator.base_generator import BaseGenerator
 from aiko2.retriever import Query, QueryType
 import json
-from aiko2.utils import ComponentMixin, Memory
+from aiko2.pipeline.pipeline_components import ComponentMixin
 
 class EvaluatorResponse(typing.TypedDict):
     """

@@ -1,7 +1,7 @@
 from aiko2.core import Conversation, Message, User, Role
 from abc import ABC, abstractmethod
 from aiko2.config import Config
-import aiko2.utils.pipeline_components as pipeline_components
+import aiko2.pipeline.pipeline_components as pipeline_components
 from dataclasses import dataclass, field
 
 @dataclass
