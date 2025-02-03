@@ -250,10 +250,6 @@ class Pipeline(BasePipeline):
                 # also take into consideration meta data of conversation, like users, timestamps, private/group chat, etc.
                 return None
 
-
-        # add memories
-        if len(memories) > 0:
-            self.add_memories(memories)
             
         
         # Retrieve information
@@ -265,6 +261,10 @@ class Pipeline(BasePipeline):
             if len(retrieved_info) > 0:
                 retrieved_info.purge(min_score=0.4, max_results=3)
                 self._append_retrieval_results(conversation, retrieved_info)
+                
+        # add memories after retrieval
+        if len(memories) > 0:
+            self.add_memories(memories)
         
         # insert the system message as the first message
         conversation.messages.insert(0, self._system_message)
