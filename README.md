@@ -39,7 +39,7 @@ aiko/
 
 Before installing, ensure you have:
 
-- **Python 3.11** (Recommended: Create a virtual environment)
+- **Python 3.12** (Recommended: Create a virtual environment)
 - **pip** (Python package manager)
 - **API Keys** (for OpenAI, Gemini, or any other external services)
 
