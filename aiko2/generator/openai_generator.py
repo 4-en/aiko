@@ -151,7 +151,7 @@ class OpenAIGenerator(BaseGenerator):
             response = self.client.chat.completions.create(
                 model=self.model.value,
                 messages=self.convert_conversation_to_input(conversation),
-                temperature=self.get_config_value("temperature", 0.7),
+                temperature=self.get_config_value("temperature", 1.0),
                 max_completion_tokens=self.get_config_value("max_generated_tokens", 200),
             )
             return self.convert_output_to_message(response.choices[0].message.content)

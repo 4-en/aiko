@@ -233,22 +233,26 @@ class Pipeline(BasePipeline):
         evaluator_context = []
         memories = []
         if self.evaluator:
-            evaluation = self.evaluator.evaluate(conversation)
-            queries = evaluation.queries
-            logging.debug(f"Generated queries: {queries}")
-            evaluator_context = evaluation.context
-            logging.debug(f"Evaluator context: {evaluator_context}")
-            memories = evaluation.memories
-            logging.debug(f"Memories: {memories}")
-            reply_expectation = evaluation.reply_expectation
-            logging.debug(f"Reply expectation: {reply_expectation}")
-            if reply_expectation <= 0.3:
-                # TODO: NOTE: This is kinda arbitrary, maybe a better way to handle this
-                # would be to have a bunch of yes/no questions about the conversation
-                # state and calculate a score based on that.
-                
-                # also take into consideration meta data of conversation, like users, timestamps, private/group chat, etc.
-                return None
+            try:
+                evaluation = self.evaluator.evaluate(conversation)
+                queries = evaluation.queries
+                logging.debug(f"Generated queries: {queries}")
+                evaluator_context = evaluation.context
+                logging.debug(f"Evaluator context: {evaluator_context}")
+                memories = evaluation.memories
+                logging.debug(f"Memories: {memories}")
+                reply_expectation = evaluation.reply_expectation
+                logging.debug(f"Reply expectation: {reply_expectation}")
+                if reply_expectation <= 0.3:
+                    # TODO: NOTE: This is kinda arbitrary, maybe a better way to handle this
+                    # would be to have a bunch of yes/no questions about the conversation
+                    # state and calculate a score based on that.
+                    
+                    # also take into consideration meta data of conversation, like users, timestamps, private/group chat, etc.
+                    return None
+            except Exception as e:
+                print(f"Failed to evaluate conversation: {e}")
+                # continue without queries
 
             
         
@@ -259,7 +263,7 @@ class Pipeline(BasePipeline):
             print(f"Retrieving information for queries: {queries}")
             retrieved_info = self.retriever.retrieve(conversation, queries)
             if len(retrieved_info) > 0:
-                retrieved_info.purge(min_score=0.4, max_results=3)
+                retrieved_info.purge(min_score=0.5, max_results=3)
                 self._append_retrieval_results(conversation, retrieved_info)
                 
         # add memories after retrieval
