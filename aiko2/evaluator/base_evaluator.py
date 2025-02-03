@@ -135,6 +135,8 @@ class BaseEvaluator(ComponentMixin):
         You should not memorize any information that general knowledge, such as the capital of a country or the date of a holiday, unless specifically asked to do so.
         The memories should also be written in the third person and include the name of the person the memory is about.
         For example, a memory about {name} could look like this: {name} likes cookie dough ice cream.
+        
+        Queries and memories should contain the entire context they are about. For example, if person A said that he likes pizza, the memory should be "Person A likes pizza.", and not "He likes it."
         """
         
         return instructions + "\n\n" + self._get_format_instruction()
