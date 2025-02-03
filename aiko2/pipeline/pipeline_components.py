@@ -2,6 +2,7 @@
 from aiko2.config import Config
 from abc import ABC, abstractmethod
 from aiko2.core import Memory
+import os
 
 class MemoryHandler(ABC):
     """
@@ -163,6 +164,42 @@ class ComponentMixin:
         if not self._pipeline:
             raise ValueError("Pipeline object is not set")
         return self.get_pipeline().get_config_dir()
+    
+    def getenv(self, var: str) -> str:
+        """
+        Get an environment variable or raise an error if it is missing.
+        
+        Parameters
+        ----------
+        var : str
+            The environment variable that is missing
+        """
+        val = os.getenv(var)
+        
+        if val and val.strip() != "":
+            return val
+        
+        root = self.get_root_dir()
+        env_file = os.path.join(root, ".env")
+        
+        contents = []
+        if os.path.exists(env_file):
+            with open(env_file, 'r') as f:
+                contents = f.readlines()
+                
+        # check if the variable is already in the file
+        found = False
+        for line in contents:
+            if line.startswith(var):
+                found = True
+                break
+            
+        if not found:
+            contents.append(f"{var}= \n")
+            with open(env_file, 'w') as f:
+                f.writelines(contents)
+                
+        raise ValueError(f"Missing environment variable {var}. Set the {var} environment variable in {env_file}")
     
 import os
 class LoggingMixin:

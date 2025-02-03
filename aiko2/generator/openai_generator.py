@@ -67,14 +67,9 @@ class OpenAIGenerator(BaseGenerator):
         
         self.assistant = User(self.get_config_value("name", "Assistant"), Role.ASSISTANT)
         
-        # load .env
-        load_dotenv()
         
         # Retrieve the OpenAI API key from the .env file
-        API_KEY = os.getenv(OPENAI_API_KEY_NAME)
-        
-        if not API_KEY:
-            raise ValueError(f"Missing OpenAI API Key. Set the {OPENAI_API_KEY_NAME} environment variable.")
+        API_KEY = self.getenv(OPENAI_API_KEY_NAME)
         
         # Initialize the OpenAI client
         self.client = openai.OpenAI(

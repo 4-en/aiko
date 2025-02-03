@@ -28,6 +28,16 @@ class BasePipeline(ABC):
             whether to generate a response or not, for example if
             the message wasn't directed at the AI.
         """
+        
+        # TODO: Add more generation parameters, such as:
+        # - domain: str (for retrieval or memory storage)
+        # - context: str (context regardless of conversation and retrieval)
+        # - retrieval: bool (whether to retrieve memories or not)
+        # - memory: bool (whether to store the conversation in memory or not)
+        # - reply-chance-multiplier: float (multiplier for the reply chance, ie how likely the AI is to reply)
+        # - reply-chance-threshold: float (threshold for the reply chance, ie how likely the AI is to reply)
+        # - probably more...
+        
         pass
 
     def __call__(self, conversation: Conversation) -> Message | None:

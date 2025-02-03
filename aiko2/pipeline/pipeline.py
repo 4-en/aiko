@@ -119,7 +119,7 @@ class Pipeline(BasePipeline):
         
         self.config.save(self.root_dir+"/config.txt")
 
-    def _add_memories(self, memories: list[Memory], domain: str=None) -> None:
+    def add_memories(self, memories: list[Memory], domain: str=None) -> None:
         """
         Add memories to the memory handler.
 
@@ -253,7 +253,7 @@ class Pipeline(BasePipeline):
 
         # add memories
         if len(memories) > 0:
-            self._add_memories(memories)
+            self.add_memories(memories)
             
         
         # Retrieve information
@@ -263,6 +263,7 @@ class Pipeline(BasePipeline):
             print(f"Retrieving information for queries: {queries}")
             retrieved_info = self.retriever.retrieve(conversation, queries)
             if len(retrieved_info) > 0:
+                retrieved_info.purge(min_score=0.4, max_results=3)
                 self._append_retrieval_results(conversation, retrieved_info)
         
         # insert the system message as the first message

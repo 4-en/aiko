@@ -76,10 +76,8 @@ class GeminiGenerator(BaseGenerator):
         load_dotenv()
         
         # Retrieve the Gemini API key from the .env file
-        API_KEY = os.getenv(GEMINI_API_KEY_NAME)
+        API_KEY = self.getenv(GEMINI_API_KEY_NAME)
         
-        if not API_KEY:
-            raise ValueError(f"Missing OpenAI API Key. Set the {GEMINI_API_KEY_NAME} environment variable.")
         
         # Initialize the gemini api key
         genai.configure(api_key=API_KEY)
