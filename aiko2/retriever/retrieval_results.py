@@ -443,6 +443,8 @@ class RetrievalResults:
             The result to add.
         """
         
+        # TODO: add more control over how results are split.
+        # This should be controlled either by the pipeline or by the config file
         if len(query_result.result) > 750:
             # Split long results into smaller parts
             query_parts = query_result.chunk_result()
@@ -500,7 +502,7 @@ class RetrievalResults:
         return self.scoring_method is not None
     
 
-    def purge(self, min_score: float=0.0, max_results: int=None):
+    def purge(self, min_score: float=0.0, max_results: int=None, min_query_results: int=1):
         """
         Purge the results based on the minimum score and the maximum number of results.
         
@@ -510,14 +512,17 @@ class RetrievalResults:
             The minimum score of the results. The default is 0.0.
         max_results : int, optional
             The maximum number of results to keep. The default is None.
+        min_query_results : int, optional
+            The minimum number of results to keep for each query. The default is 1.
+            This bypasses the max_results parameter (if n_queries * min_query_results > max_results), but not the min_score parameter.
         """
-        top_results = self.top_k(max_results, min_score)
+        top_results = self.top_k(max_results, min_score, min_query_results=min_query_results)
         self.results = {}
         for result in top_results:
             self.add_result(result)
         
     
-    def top_k(self, k: int | None, min_score: float | None=None, query: Query | None=None) -> list[QueryResult]:
+    def top_k(self, k: int | None, min_score: float | None=None, query: Query | None=None, min_query_results: int=1) -> list[QueryResult]:
         """
         Get the top k results.
         
@@ -530,6 +535,11 @@ class RetrievalResults:
             The minimum score of the results. The default is None.
         query : Query, optional
             The query to get the top results for. If None, get the top results for all queries in one ranking.
+            The default is None.
+        min_query_results : int, optional
+            The minimum number of results to keep for each query.
+            The default is 1.
+            This bypasses the k parameter (if n_queries * min_query_results > k), but not the min_score parameter.
             
         Returns
         -------
@@ -560,7 +570,29 @@ class RetrievalResults:
                 all_results.extend(self.results[query_id])
             all_results.sort(key=lambda x: x.score, reverse=True)
             if k is not None:
-                results = all_results[:k]
+                included_queries = dict()
+                results = []
+                remaining = []
+                if(min_query_results > 0):
+                    # first make sure we have at least min_query_results for each query
+                    for result in all_results:
+                        if result.query.query_id not in included_queries:
+                            results.append(result)
+                            included_queries[result.query.query_id] = 1
+                        elif included_queries[result.query.query_id] < min_query_results:
+                            results.append(result)
+                            included_queries[result.query.query_id] += 1
+                        else:
+                            remaining.append(result)
+                        
+                    # then add the remaining results if needed
+                    if len(results) < k:
+                        results.extend(remaining[:k-len(results)])
+                        # sort again
+                        results.sort(key=lambda x: x.score, reverse=True)
+                else:
+                    results = all_results[:k]
+                
             else:
                 results = all_results
                 
