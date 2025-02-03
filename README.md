@@ -89,8 +89,8 @@ pip install -r requirements.txt
 - [x] use openai api for replies (no finetuning)
 - [ ] finetune openai model
 - [ ] integrate web ui
-- [ ] integrate RAG
-- [ ] memory system
+- [x] integrate RAG
+- [x] memory system
 - [ ] train and use local LLM
 - [ ] full character creation using config files
 - [ ] logging for all relevant components to improve future quality
