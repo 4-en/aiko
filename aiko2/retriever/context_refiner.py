@@ -74,4 +74,12 @@ class ContextRefiner(BaseRetriever):
         
         # TODO: Implement context refinement using a generative model
         
+        # Steps:
+        # 1. Generate prompt using the conversation, queries and results
+        # 2. Use the prompt to generate a response
+        # 2.5. (Optional) Also generate further queries? This could be done as some sort of loop with the evaluator and retriever.
+        #      Would need parameters to control the number of iterations and the stopping criteria.
+        # 3. Create a new context with the refined response
+        # 4. Return the refined context
+        
         return refined_context
