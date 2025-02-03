@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from duckduckgo_search import DDGS
 from readability import Document
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 # DuckDuckGo date filters
 DATE_FILTERS = {
@@ -102,7 +103,24 @@ def contains_text(s, min_words=2):
 def scrape_website_sync(url):
     """Scrape a webpage and extract properly formatted text."""
     try:
-        html = requests.get(url).text
+        html = requests.get(url, timeout=3, headers={'User-Agent': 'Mozilla/5.0'}).text
+        doc = Document(html)  # Extracts main readable content
+        soup = BeautifulSoup(doc.summary(), "html.parser")  # Parse with BeautifulSoup
+        
+        paragraphs = [p.get_text(" ", strip=True) for p in soup.find_all("p") if p.get_text(strip=True)]
+        formatted_text = "\n\n".join(paragraphs)  # Keep paragraph breaks
+
+        # Remove spaces before punctuation (e.g., "word ." → "word.")
+        clean_text = re.sub(r"\s+([.,!?;:()\[\]'])", r"\1", formatted_text)
+
+        return url, doc.title(), clean_text
+    except Exception as e:
+        return url, "Error", f"Failed to parse content: {e}"
+    
+def scrape_website(url):
+    """Scrape a webpage and extract properly formatted text."""
+    try:
+        html = requests.get(url, timeout=3, headers={'User-Agent': 'Mozilla/5.0'}).text
         doc = Document(html)  # Extracts main readable content
         soup = BeautifulSoup(doc.summary(), "html.parser")  # Parse with BeautifulSoup
         
@@ -116,6 +134,20 @@ def scrape_website_sync(url):
     except Exception as e:
         return url, "Error", f"Failed to parse content: {e}"
 
+def scrape_websites_parallel(urls, max_workers=5):
+    """Scrape multiple webpages in parallel."""
+    results = []
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(scrape_website, url): url for url in urls}
+        for future in futures:
+            try:
+                result = future.result()
+                if result and result[1] != "Error" and contains_text(result[2], min_words=10):
+                    results.append(result)
+            except Exception as e:
+                results.append((futures[future], "Error", f"Failed to fetch content: {e}"))
+    return results
+
 
 def get_search_results_sync(query, num_results=5, time_filter="all"):
     """Get search result URLs from DuckDuckGo synchronously with optional date filtering."""
@@ -123,7 +155,7 @@ def get_search_results_sync(query, num_results=5, time_filter="all"):
     time_code = DATE_FILTERS.get(time_filter.lower(), None)  # Get time filter code
 
     with DDGS() as ddgs:
-        for result in ddgs.text(query, max_results=num_results, timelimit=time_code):
+        for result in ddgs.text(query, max_results=num_results, timelimit=time_code, safesearch="off"):
             if not is_blacklisted(result["href"]) and not matches_useless_pattern(result["href"]):
                 results.append(result["href"])
     
@@ -161,8 +193,7 @@ class WebRetriever(BaseRetriever):
                 search_results.extend(get_search_results_sync(query.query, num_results=5, time_filter="month"))
                 search_results = list(set(search_results))  # Remove duplicates
                 # scrape the content from the search results
-                tasks = [scrape_website_sync(url) for url in search_results]
-                scraped_data = [task for task in tasks]
+                scraped_data = scrape_websites_parallel(search_results, max_workers=10)
                 
                 for idx, (url, title, content) in enumerate(scraped_data, 1):
                     if contains_text(content, min_words=10):                

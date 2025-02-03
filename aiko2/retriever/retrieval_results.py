@@ -429,11 +429,12 @@ class RetrievalResults:
             
         self.results: dict[str, QueryResult] = {}
         self.scoring_method: str | None = None
+        self._sources = {} # stores results by soure to avoid duplicates
         
 
 
     
-    def add_result(self, query_result: QueryResult):
+    def add_result(self, query_result: QueryResult, was_split: bool=False):
         """
         Add a result to the retrieval results.
         
@@ -443,13 +444,18 @@ class RetrievalResults:
             The result to add.
         """
         
+        if query_result.source in self._sources and not was_split:
+            # Avoid duplicates
+            return
+            
+        
         # TODO: add more control over how results are split.
         # This should be controlled either by the pipeline or by the config file
         if len(query_result.result) > 750:
             # Split long results into smaller parts
             query_parts = query_result.chunk_result()
             for query_part in query_parts:
-                self.add_result(query_part)
+                self.add_result(query_part, was_split=True)
             return
         
         if query_result.query.query_id not in self.results:
@@ -518,6 +524,8 @@ class RetrievalResults:
         """
         top_results = self.top_k(max_results, min_score, min_query_results=min_query_results)
         self.results = {}
+        self.scoring_method = None
+        self._sources = {}
         for result in top_results:
             self.add_result(result)
         
