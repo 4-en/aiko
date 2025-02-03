@@ -17,17 +17,12 @@ class BasicDiscordBot(discord.Client):
     This is mainly for testing and demonstration purposes.
     """
     
-    def __init__(self, *, intents, **options):
+    def __init__(self, pipeline, *, intents, **options):
         super().__init__(intents=intents, **options)
         self.message_queue: list[tuple[discord.TextChannel, Conversation]] = []
         self.executor = ThreadPoolExecutor(max_workers=1)
         self.conversations: dict[int, Conversation] = {}
-        memory_retriever = MemoryRetriever()
-        web_retriever = WebRetriever()
-        router = RetrievalRouter()
-        router.add_retriever(memory_retriever)
-        router.add_retriever(web_retriever, negated_routing_function(query_type_routing_function([QueryType.PERSONAL]))) # only use web retriever for non-personal queries
-        self.pipeline = Pipeline(Gemini15Flash8B(), retriever=router, evaluator=Gemini15Flash8BEvaluator(), memory_handler=memory_retriever)
+        self.pipeline = pipeline
         self.bot_user = User(self.pipeline.config.name, Role.ASSISTANT)
         self._generating = False
 
@@ -194,12 +189,20 @@ class BasicDiscordBot(discord.Client):
         print(f'An error occurred in event {event}: {args} {kwargs}')
         
     def main():
-        load_dotenv()
+        # setup pipeline
+        memory_retriever = MemoryRetriever()
+        web_retriever = WebRetriever()
+        router = RetrievalRouter()
+        router.add_retriever(memory_retriever)
+        router.add_retriever(web_retriever, negated_routing_function(query_type_routing_function([QueryType.PERSONAL]))) # only use web retriever for non-personal queries
+        pipeline = Pipeline(Gemini15Flash8B(), retriever=router, evaluator=Gemini15Flash8BEvaluator(), memory_handler=memory_retriever)
+        
+        # setup discord bot
         token = os.getenv('DISCORD_SECRET')
         if token is None:
             raise ValueError("Missing Discord token. Set the DISCORD_SECRET environment variable.")
         intents = discord.Intents.all()
-        client = BasicDiscordBot(intents=intents)
+        client = BasicDiscordBot(pipeline, intents=intents)
         client.run(token)
     
 if __name__ == '__main__':
