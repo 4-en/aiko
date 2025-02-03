@@ -2,14 +2,13 @@ import os
 import sys
 
 def get_storage_location(app_name: str = "aiko2", create: bool = True) -> str:
-    """
-    Get storage location for configs, logs, and other files.
+    """Get storage location for configs, logs, and other files.
     Depending on the platform, the location may vary.
     
     
     Linux/Unix: ~/.local/share/<app_name>
     macOS: ~/Library/Application Support/<app_name>
-    Windows: %APPDATA%\<app_name>
+    Windows: %APPDATA%/<app_name>
     
     Parameters
     ----------
