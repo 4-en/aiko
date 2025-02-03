@@ -197,7 +197,10 @@ class ComponentMixin:
         if not found:
             contents.append(f"{var}= \n")
             with open(env_file, 'w') as f:
-                f.writelines(contents)
+                for line in contents:
+                    if not line.endswith("\n"):
+                        line += "\n"
+                    f.write(line)
                 
         raise ValueError(f"Missing environment variable {var}. Set the {var} environment variable in {env_file}")
     
