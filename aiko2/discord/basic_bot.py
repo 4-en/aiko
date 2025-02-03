@@ -12,6 +12,10 @@ import traceback
 import asyncio
 
 class BasicDiscordBot(discord.Client):
+    """
+    A basic Discord bot that uses the Aiko2 pipeline to generate responses.
+    This is mainly for testing and demonstration purposes.
+    """
     
     def __init__(self, *, intents, **options):
         super().__init__(intents=intents, **options)
@@ -34,6 +38,16 @@ class BasicDiscordBot(discord.Client):
 
 
     async def _send_message(self, channel, content):
+        """
+        Send a message to a channel.
+        If the content is too long, it will be split into chunks of 1900 characters.
+        
+        Parameters
+        ----------
+        channel : discord.TextChannel
+            The channel to send the message to
+        content : str
+            The content of the message"""
         # make sure content is not longer than 2000 characters
         if len(content) > 2000:
             chunks = split_text(content, 1900)
@@ -45,6 +59,9 @@ class BasicDiscordBot(discord.Client):
 
         
     async def _generate_reply(self, channel:discord.TextChannel, conversation):
+        """
+        Generate a reply based on the conversation and send it to the channel.
+        """
         self._generating = True
         async with channel.typing():
             response = await asyncio.get_event_loop().run_in_executor(self.executor, self.pipeline.generate, conversation)
@@ -62,6 +79,21 @@ class BasicDiscordBot(discord.Client):
             await self._generate_reply(channel, conv)
 
     async def execute_command(self, message:discord.Message):
+        """
+        Execute a command.
+        
+        Commands:
+        !clear - clear the conversation
+        !save - save the pipeline
+        !add_memory <person>:<memory> - add a memory
+        !toggle - toggle replies on/off
+        !help - show help
+        
+        Parameters
+        ----------
+        message : discord.Message
+            The message containing the command
+        """
         # very basic command to test functions
 
         if message.content.startswith('!clear'):
