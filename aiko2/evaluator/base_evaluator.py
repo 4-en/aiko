@@ -128,6 +128,7 @@ class BaseEvaluator(ComponentMixin):
         Even if the user didn't directly ask a question, you can still generate queries to retrieve information if it could help in replying to the message.
         You should generate questions about both {name} and any other people or topics relevant to the conversation and to the next reply.
         For example, if person A asks person B if they like pizza, you could generate this query: "Does person B like pizza?" and "What food does person B like?".
+        The type of the query should be 'PERSONAL' if it's related to someone from the conversation, 'NEWS' if it's about current events, 'RESEARCH' if it's about general or more advanced knowledge, or 'OTHER' if it doesn't fit into any of these categories.
         
         Your other task is to decide if any content of the message should be memorized. Content that should be memorized is anything personal, either about yourself or another person.
         This includes statements, plans, interests, appearances and more. You can see it as storing information about something.
@@ -144,7 +145,7 @@ class BaseEvaluator(ComponentMixin):
         """
         
         format_instruction = """Use this JSON schema:
-        QueryType = 'GENERAL' | 'PERSONAL' | 'NEWS' | 'RESEARCH' | 'OTHER'
+        QueryType = 'PERSONAL' | 'NEWS' | 'RESEARCH' | 'OTHER'
         Memory = {'memory': str, 'person': str, 'topic': str}
         Query = {'query': str, 'topic': str, 'type': QueryType}
         Evaluation = {'reply_expectation': float, 'queries': list[Query], 'memories': list[Memory]}
