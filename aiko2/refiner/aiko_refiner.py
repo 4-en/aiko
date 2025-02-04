@@ -181,14 +181,21 @@ class AikoRefiner(BaseRefiner):
         
         articles = ["a", "an", "the"]
         repositions = ["in", "on", "at", "by", "with", "from", "to"]
-        verbs = ["is", "are", "was", "were", "has", "have", "do", "does"]
+        verbs = [("is", "are"), 
+                 ("was", "were"), 
+                 ("has", "have"), 
+                 ("do", "does")]
         
         if word in articles:
             return random.choice(articles)
         elif word in repositions:
             return random.choice(repositions)
-        elif word in verbs:
-            return random.choice(verbs)
+        else:
+            for v1, v2 in verbs:
+                if word == v1:
+                    return v2
+                elif word == v2:
+                    return v1
         
         return word
         
@@ -209,11 +216,11 @@ class AikoRefiner(BaseRefiner):
             The un-refined content.
         """
         
-        SPELLING_ERROR_CHANCE = 0.02
+        SPELLING_ERROR_CHANCE = 0.01
         CASE_ERROR_CHANCE = 0.1
-        PUNCTUATION_ERROR_CHANCE = 0.2
-        VARIED_PUNCTUATION_CHANCE = 0.2
-        GRAMMAR_ERROR_CHANCE = 0.02
+        PUNCTUATION_ERROR_CHANCE = 0.02
+        VARIED_PUNCTUATION_CHANCE = 0.05
+        GRAMMAR_ERROR_CHANCE = 0.01
         
 
         # Split the content into words
