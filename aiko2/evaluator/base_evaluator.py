@@ -72,6 +72,11 @@ class BaseEvaluator(ComponentMixin):
         queries = json_input.get("queries", [])
         memories = json_input.get("memories", [])
         reply_expectation = json_input.get("reply_expectation", 0.0)
+        thoughts = json_input.get("thoughts", "")
+        query_context = []
+        if thoughts != "": # add thoughts to query context
+            query_context.append(thoughts)
+            print(f"Thinking: {thoughts}")
         
         queries_response = []
         for query in queries:
@@ -96,12 +101,11 @@ class BaseEvaluator(ComponentMixin):
             
             memories_response.append(Memory(memory_str, person, topic))
             
-        context_response = [] # TODO: add context to evaluation
             
         evaluation = Evaluation(
             conversation,
             queries_response,
-            context_response,
+            query_context,
             memories_response,
             reply_expectation
         )
@@ -119,12 +123,15 @@ class BaseEvaluator(ComponentMixin):
         """
         name = self.get_config_value("name", "Assistant")
         instructions = f"""You are an evaluator for {name}.
-        Your task is to decide whether to reply to a chat message or not, based on the conversation context, by generating a probability between 0.0 and 1.0 of replying to the message.
+        You are given a piece of a conversation and have to evaluate it in order to help {name} form a reply, similar to an inner monologue. First, think out loud about the conversation and its state. Decide what kind of reply is expected and what information is needed to form a reply.
+        If you already know what is needed or expected, write it down. Otherwise, think about what you would need to know to reply to the message. This could be information about the speaker, the topic, or anything else relevant to the conversation.
+        
+        Your task then is to decide whether to reply to a chat message or not, based on the conversation context, by generating a probability between 0.0 and 1.0 of replying to the message.
         This number represents how expected it is that the message should be replied to. For example, if {name} is in a conversation with the speaker or the speaker is asking a question, the probability should be higher.
         If the message is not directed at {name}, the probability should be lower.
         
         Then, decide whether it is necessary to retrieve external information to reply to the message, by generating up to 3 queries to retrieve information.
-        When asking about a specific person, including {name}, use the third person and their name. The questions can be about general information or about more personal information.
+        When asking about a specific person, including {name}, use the third person and their name. The questions can be about general information or about more personal information. For example, if the user asks about the opinion of {name} on digital art, you could first generate a query about digital art in general and then a query about {name}'s opinion on digital art.
         Even if the user didn't directly ask a question, you can still generate queries to retrieve information if it could help in replying to the message.
         You should generate questions about both {name} and any other people or topics relevant to the conversation and to the next reply.
         For example, if person A asks person B if they like pizza, you could generate this query: "Does person B like pizza?" and "What food does person B like?".
@@ -150,7 +157,7 @@ class BaseEvaluator(ComponentMixin):
         QueryType = 'PERSONAL' | 'NEWS' | 'RESEARCH' | 'OTHER'
         Memory = {'memory': str, 'person': str, 'topic': str}
         Query = {'query': str, 'topic': str, 'type': QueryType}
-        Evaluation = {'reply_expectation': float, 'queries': list[Query], 'memories': list[Memory]}
+        Evaluation = {'thoughts': str, 'reply_expectation': float, 'queries': list[Query], 'memories': list[Memory]}
         Return: Evaluation"""
         
         return format_instruction
