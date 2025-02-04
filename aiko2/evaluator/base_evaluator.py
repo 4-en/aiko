@@ -122,7 +122,7 @@ class BaseEvaluator(ComponentMixin):
             The instructions for the evaluator.
         """
         name = self.get_config_value("name", "Assistant")
-        instructions = f"""You are an evaluator for {name}.
+        instructions = f"""You are {name}'s inner monologue.
         You are given a piece of a conversation and have to evaluate it in order to help {name} form a reply, similar to an inner monologue. First, think out loud about the conversation and its state. Decide what kind of reply is expected and what information is needed to form a reply.
         If you already know what is needed or expected, write it down. Otherwise, think about what you would need to know to reply to the message. This could be information about the speaker, the topic, or anything else relevant to the conversation.
         
@@ -146,7 +146,9 @@ class BaseEvaluator(ComponentMixin):
         Queries and memories should contain the entire context they are about. For example, if person A said that he likes pizza, the memory should be "Person A likes pizza.", and not "He likes it."
         """
         
-        return instructions + "\n\n" + self._get_format_instruction()
+        # TODO: test this more and remove config instructions if not working well
+        # Also maybe adjust evaluator instructions.
+        return f"{self.get_config_value("instructions", "")}\n\n{instructions}\n\n{self._get_format_instruction()}"
     
     def _get_format_instruction(self) -> str:
         """
