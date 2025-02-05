@@ -5,6 +5,7 @@ from aiko2.generator.base_generator import BaseGenerator
 from aiko2.retriever import Query, QueryType
 import json
 from aiko2.pipeline.pipeline_components import ComponentMixin
+from aiko2.utils import parse_timestamp
 
 class EvaluatorResponse(typing.TypedDict):
     """
@@ -97,13 +98,19 @@ class BaseEvaluator(ComponentMixin):
             memory_str = memory.get("memory", "")
             person = memory.get("person", "")
             topic = memory.get("topic", "")
+            
             time_relevance = memory.get("time_relevance", "ALWAYS")
             time_relevance = TimeRelevance.from_string(time_relevance)
+            
+            memory_age = memory.get("memory_age", 0)
+            memory_age = parse_timestamp(memory_age)
+            
+            truthfulness = memory.get("truthfulness", 1.0)
             
             if memory_str == "" or person == "" or topic == "":
                 continue
             
-            memories_response.append(Memory(memory_str, person, topic, time_relevance))
+            memories_response.append(Memory(memory_str, person, topic, time_relevance, truthfulness, memory_age))
             
             
         evaluation = Evaluation(
@@ -146,9 +153,13 @@ class BaseEvaluator(ComponentMixin):
         You should not memorize any information that general knowledge, such as the capital of a country or the date of a holiday, unless specifically asked to do so.
         The memories should also be written in the third person and include the name of the person the memory is about.
         For example, a memory about {name} could look like this: {name} likes cookie dough ice cream.
+        Memories should also contain a value of memory_age, which is the age of the memory in days or the date in one of the accepted format. It should be as accurate as possible given the information. This refers to the time the memory is about. For example, if someone said that they had pizza for dinner yesterday, the memory_age is 1. If someone said that they had pizza for dinner on monday, the memory_age is "monday".
+        The truthfulness of the memory should be included in the memory as a float between 0.0 and 1.0, where 0.0 is completely false and 1.0 is completely true. For example, in normal conversation, if someone is making a statement about themselves, it's usually true, so the truthfulness should be close to 1.0. If someone is making a statement about someone else, it could be less true, so the truthfulness should be lower, around 0.8. If the information is very unbelievable or goes against your knowledge, the truthfulness should be lower, around 0.2. If the information is an obvious lie, the truthfulness should be 0.0.
         
         Queries and memories should contain the entire context they are about. For example, if person A said that he likes pizza, the memory should be "Person A likes pizza.", and not "He likes it."
         Queries and memories have to contain a value of TimeRelevance, which can be 'NOW', 'WEEK', 'MONTH', 'YEAR', or 'ALWAYS'. This value represents how relevant the information is in time. For example, if the user asks or says something about the current weather, the time relevance is 'NOW', but if the user asks about a a cooking recipe, the time relevance is 'ALWAYS'. Depending on the context, MONTH or YEAR can be used if new information is generally better, but doesn't have to be as up-to-date as NOW. For example, this could be about the latest album of a band or the newest movie in a genre.
+        
+        Queries should be used to gain information that is needed to reply to the message, while memories should be used to store information that might be needed in the future. You can not use queries to decide whether to memorize information or not.
         """
         
         # TODO: test this more and remove config instructions if not working well
@@ -163,7 +174,8 @@ class BaseEvaluator(ComponentMixin):
         format_instruction = """Use this JSON schema:
         QueryType = 'PERSONAL' | 'NEWS' | 'RESEARCH' | 'OTHER'
         TimeRelevance = 'NOW' | 'WEEK' | 'MONTH' | 'YEAR' | 'ALWAYS'
-        Memory = {'memory': str, 'person': str, 'topic': str, 'time_relevance': TimeRelevance}
+        MemoryAge = Union[int, str] # int for days, str in format DD-MM-YYYY or DD-MM or DD or YYYY or name of the weekday or month
+        Memory = {'memory': str, 'person': str, 'topic': str, 'time_relevance': TimeRelevance, 'memory_age': MemoryAge, 'truthfulness': float} # the memory string should be in the third person and only contain the information, not the context (Yes: "Person A likes pizza.", No: "Person B said that A likes pizza.")
         Query = {'query': str, 'topic': str, 'type': QueryType, 'time_relevance': TimeRelevance}
         Evaluation = {'thoughts': str, 'reply_expectation': float, 'queries': list[Query], 'memories': list[Memory]}
         Return: Evaluation"""

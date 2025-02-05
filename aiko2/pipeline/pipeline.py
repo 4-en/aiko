@@ -157,6 +157,7 @@ class Pipeline(BasePipeline):
             for memory in memories:
                 memory_str = memory.memory
                 print(f"Adding memory: {memory_str}")
+                print(f"Person: {memory.person}, Relevance: {memory.time_relevance}, Time: {memory.memory_age}, Truthfulness: {memory.truthfulness}")
                 self.memory_handler.add_memory(memory, domain)
 
         

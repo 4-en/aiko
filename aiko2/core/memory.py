@@ -56,6 +56,8 @@ class TimeRelevance(Enum):
         
         return value * np.exp(-decay_rate * days_since)
 
+import time
+
 @dataclass
 class Memory:
     """
@@ -66,4 +68,7 @@ class Memory:
     person: str # The person the memory is about
     topic: str # The topic of the memory
     time_relevance: TimeRelevance = TimeRelevance.ALWAYS
+    truthfulness: float = 1.0 # The truthfulness of the memory, 1.0 is completely true, 0.0 is completely false
+    memory_age: float = 0 # The age of the memory in seconds (what it is about, not when it was created)
+    creation_time: float = time.time() # The time the memory was created
     
