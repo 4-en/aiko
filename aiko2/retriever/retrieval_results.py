@@ -5,6 +5,7 @@ import rank_bm25
 from uuid import uuid4
 from aiko2.utils import split_text, chunk_text
 from enum import Enum
+from aiko2.core import TimeRelevance
 
 class QueryType(Enum):
     GENERAL = 'GENERAL'
@@ -51,12 +52,17 @@ class Query:
         The type of the query.
     query_id : str
         The id of the query.
+    time_relevance : TimeRelevance
+        The relevance of the query in time.
+    embedding : np.ndarray
+        The embedding of the query.
     """
     
     query: str
     topic: str
     query_type: QueryType
     query_id: str | None = None
+    time_relevance: TimeRelevance = TimeRelevance.ALWAYS
     embedding: np.ndarray | None = None
     
     def __post_init__(self):

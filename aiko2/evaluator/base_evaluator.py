@@ -1,4 +1,4 @@
-from aiko2.core import Conversation, Message, User, Role, Memory
+from aiko2.core import Conversation, Message, User, Role, Memory, TimeRelevance
 from dataclasses import dataclass, field
 import typing_extensions as typing
 from aiko2.generator.base_generator import BaseGenerator
@@ -83,23 +83,27 @@ class BaseEvaluator(ComponentMixin):
             query_str = query.get("query", "")
             topic = query.get("topic", "")
             query_type = query.get("type", "GENERAL")
+            time_relevance = query.get("time_relevance", "ALWAYS")
             query_type = QueryType.from_string(query_type)
+            time_relevance = TimeRelevance.from_string(time_relevance)
             
             if query_str == "" or topic == "":
                 continue
             
-            queries_response.append(Query(query_str, topic, query_type))
+            queries_response.append(Query(query_str, topic, query_type, time_relevance=time_relevance))
             
         memories_response = []
         for memory in memories:
             memory_str = memory.get("memory", "")
             person = memory.get("person", "")
             topic = memory.get("topic", "")
+            time_relevance = memory.get("time_relevance", "ALWAYS")
+            time_relevance = TimeRelevance.from_string(time_relevance)
             
             if memory_str == "" or person == "" or topic == "":
                 continue
             
-            memories_response.append(Memory(memory_str, person, topic))
+            memories_response.append(Memory(memory_str, person, topic, time_relevance))
             
             
         evaluation = Evaluation(
@@ -144,6 +148,7 @@ class BaseEvaluator(ComponentMixin):
         For example, a memory about {name} could look like this: {name} likes cookie dough ice cream.
         
         Queries and memories should contain the entire context they are about. For example, if person A said that he likes pizza, the memory should be "Person A likes pizza.", and not "He likes it."
+        Queries and memories have to contain a value of TimeRelevance, which can be 'NOW', 'WEEK', 'MONTH', 'YEAR', or 'ALWAYS'. This value represents how relevant the information is in time. For example, if the user asks or says something about the current weather, the time relevance is 'NOW', but if the user asks about a a cooking recipe, the time relevance is 'ALWAYS'. Depending on the context, MONTH or YEAR can be used if new information is generally better, but doesn't have to be as up-to-date as NOW. For example, this could be about the latest album of a band or the newest movie in a genre.
         """
         
         # TODO: test this more and remove config instructions if not working well
@@ -157,8 +162,9 @@ class BaseEvaluator(ComponentMixin):
         
         format_instruction = """Use this JSON schema:
         QueryType = 'PERSONAL' | 'NEWS' | 'RESEARCH' | 'OTHER'
-        Memory = {'memory': str, 'person': str, 'topic': str}
-        Query = {'query': str, 'topic': str, 'type': QueryType}
+        TimeRelevance = 'NOW' | 'WEEK' | 'MONTH' | 'YEAR' | 'ALWAYS'
+        Memory = {'memory': str, 'person': str, 'topic': str, 'time_relevance': TimeRelevance}
+        Query = {'query': str, 'topic': str, 'type': QueryType, 'time_relevance': TimeRelevance}
         Evaluation = {'thoughts': str, 'reply_expectation': float, 'queries': list[Query], 'memories': list[Memory]}
         Return: Evaluation"""
         

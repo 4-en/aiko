@@ -1,5 +1,5 @@
 from typing import Iterator
-from llama_cpp import Llama, LLAMA_SPLIT_MODE_NONE
+from llama_cpp import Llama
 import time
 
 def test_chat_completion():
@@ -10,13 +10,14 @@ def test_chat_completion():
         n_ctx=100000,
         n_gpu_layers=-1,
         flash_attn=True,
+        n_threads=8
     )
     start_time = time.time()
     response = llm.create_chat_completion(
         messages = [
             {
                 "role": "system", 
-                "content": "You are a japanese fox-girl named Aiko and an expert in create poetry."},
+                "content": "You are a japanese fox-girl named Aiko and an expert in creative poetry."},
             {
                 "role": "user",
                 "content": "Write a poem about minecraft."
