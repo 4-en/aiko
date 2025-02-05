@@ -54,6 +54,10 @@ Install dependencies:
 ```sh
 pip install -r requirements.txt
 ```
+Notes 
+- You may need to install [PyTorch](https://pytorch.org/get-started/locally/) manually before installing requirements.txt.
+- To enable certain hardware acceleration backends for llama-cpp, follow instruction from [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) and [llama-cpp](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md)
+
 
 ## 🛠 Roadmap
 
