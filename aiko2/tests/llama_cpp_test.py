@@ -2,6 +2,38 @@ from typing import Iterator
 from llama_cpp import Llama
 import time
 
+def manual_inference():
+    llm = Llama.from_pretrained(
+        "bartowski/Llama-3.2-3B-Instruct-GGUF",
+        filename="*Q6_K.gguf",
+        verbose=True,
+        n_ctx=10000,
+        n_gpu_layers=-1,
+        flash_attn=True
+    )
+
+    print("Model loaded. Enter prompts to generate completions.")
+    print("Enter 'exit' to quit.")
+
+    while True:
+        prompt = input("Prompt: ")
+        if prompt == "exit":
+            break
+        start_time = time.time()
+        response = llm(
+            prompt,
+            max_tokens=4000,
+            temperature=1.3
+        )
+        end_time = time.time()
+        completion_tokens = int(response["usage"]["completion_tokens"])
+        tps = completion_tokens / (end_time - start_time)
+        tps = round(tps, 2)
+        print(f"TPS: {tps}, Time: {round(end_time - start_time, 2)}s")
+        print()
+        print(response["choices"][0])
+        print()
+
 def test_chat_completion():
     llm = Llama.from_pretrained(
         "bartowski/Llama-3.2-3B-Instruct-GGUF",
@@ -56,5 +88,6 @@ def test_basic_completion():
 
 
 if __name__ == "__main__":
-    test_chat_completion()
+    #test_chat_completion()
     # test_basic_completion()
+    manual_inference()
