@@ -36,18 +36,19 @@ class TimeRelevance(Enum):
         """
         Calculate the decayed value of a memory based on the time since the memory was created.
         """
-        half_time = 0
-        
+        half_time = 1000
+        # Half time is double the literal time relevance to include more
+        # slightly older information if it's relevant enough.
         if self == TimeRelevance.NOW:
-            half_time = 1
+            half_time = 2
         elif self == TimeRelevance.WEEK:
-            half_time = 7
+            half_time = 14
         elif self == TimeRelevance.MONTH:
-            half_time = 30
+            half_time = 60
         elif self == TimeRelevance.YEAR:
-            half_time = 365
+            half_time = 730
         elif self == TimeRelevance.ALWAYS:
-            return value
+            half_time = 7300 # basically 20 years, probably doesn't do anything except slightly favor newer memories in edge cases
         
         days_since = sec_since / 86400
         
