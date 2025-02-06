@@ -34,32 +34,75 @@ def manual_inference():
         print(response["choices"][0])
         print()
 
+def format_output(output: str) -> str:
+    # replace /n in the output with actual newlines
+    output = output.replace("\\n", "\n")
+    return output
+
 def test_chat_completion():
+    # llm = Llama.from_pretrained(
+    #     "unsloth/DeepSeek-R1-Distill-Qwen-7B-GGUF",
+    #     filename="*Q4_K_M.gguf",
+    #     verbose=False,
+    #     n_ctx=100000,
+    #     flash_attn=True,
+    #     n_gpu_layers=-1
+    # )
+    # llm = Llama.from_pretrained(
+    #     "unsloth/DeepSeek-R1-Distill-Qwen-14B-GGUF",
+    #     filename="*Q4_K_M.gguf",
+    #     verbose=False,
+    #     n_ctx=100000,
+    #     flash_attn=True,
+    #     n_gpu_layers=-1
+    # )
     llm = Llama.from_pretrained(
-        "bartowski/Llama-3.2-3B-Instruct-GGUF",
-        filename="*Q6_K.gguf",
-        verbose=True,
+        "unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF",
+        filename="*Q4_K_M.gguf",
+        verbose=False,
         n_ctx=100000,
-        n_gpu_layers=-1,
         flash_attn=True,
-        n_threads=8
+        n_gpu_layers=-1
     )
+
     start_time = time.time()
     response = llm.create_chat_completion(
         messages = [
             {
                 "role": "system", 
-                "content": "You are a japanese fox-girl named Aiko and an expert in creative poetry."},
+                "content": "You are a helpful Minecraft assistant. Assist the user with any requests."},
             {
                 "role": "user",
-                "content": "Write a poem about minecraft."
+                "content": "Write a list of ten detailed tips for beginners in Minecraft."
             }
         ],
         max_tokens=4000,
-        temperature=1.3)
+        temperature=0.0
+    )
     
     end_time = time.time()
-    print(response["choices"][0])
+    content = response["choices"][0]["message"]["content"]
+
+    # if there is a </think> tag, seperate it
+    cot = ""
+    message = ""
+    if "</think>" in content:
+        cot = content.split("</think>", 1)
+        if len(cot) == 2:
+            message = cot[1]
+            cot = cot[0].replace("<think>", "")
+        else:
+            message = cot[0]
+            cot = ""
+
+    if cot:
+        print("Chain of thought:")
+        print(format_output(cot))
+        print()
+    print("Message:")
+    print(format_output(message))
+
+
 
     completion_tokens = int(response["usage"]["completion_tokens"])
     tps = completion_tokens / (end_time - start_time)
@@ -88,6 +131,6 @@ def test_basic_completion():
 
 
 if __name__ == "__main__":
-    #test_chat_completion()
+    test_chat_completion()
     # test_basic_completion()
-    manual_inference()
+    # manual_inference()
