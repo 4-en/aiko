@@ -1,5 +1,5 @@
 from .base_retriever import BaseRetriever
-from .retrieval_results import RetrievalResults, QueryResults
+from aiko2.core.retrieval_results import RetrievalResults, QueryResults
 from aiko2.core import Conversation, Message
 
 class MultiRetriever(BaseRetriever):

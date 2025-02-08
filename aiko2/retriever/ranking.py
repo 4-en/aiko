@@ -1,7 +1,7 @@
 # contains different functions for ranking the retrieval results.
 
 from abc import ABC, abstractmethod
-from aiko2.retriever import QueryResult, Query, RetrievalResults
+from aiko2.core import QueryResult, Query, RetrievalResults
 from rank_bm25 import BM25Okapi
 
 from dataclasses import dataclass

@@ -2,10 +2,10 @@ from dotenv import load_dotenv
 import os
 import discord
 from concurrent.futures import ThreadPoolExecutor
-from aiko2.core import Conversation, Message, User, Role, Memory
+from aiko2.core import Conversation, Message, User, Role, Memory, QueryType
 from aiko2.pipeline import Pipeline
 from aiko2.generator import OpenAIGenerator, Gemini15Flash8B, GPT4OMiniGenerator
-from aiko2.retriever import WebRetriever, MemoryRetriever, RetrievalRouter, query_type_routing_function, negated_routing_function, QueryType
+from aiko2.retriever import WebRetriever, MemoryRetriever, RetrievalRouter, query_type_routing_function, negated_routing_function
 from aiko2.evaluator import Gemini15Flash8BEvaluator
 from aiko2.refiner import AikoRefiner
 from aiko2.utils import split_text

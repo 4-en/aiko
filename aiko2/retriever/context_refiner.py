@@ -1,6 +1,5 @@
 from .base_retriever import BaseRetriever
-from aiko2.core import Conversation, Message
-from .retrieval_results import RetrievalResults, Query
+from aiko2.core import Conversation, Message, RetrievalResults, Query
 
 class ContextRefiner(BaseRetriever):
     """

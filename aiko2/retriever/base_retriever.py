@@ -1,6 +1,6 @@
 from aiko2.core import Conversation, Message
 from abc import ABC, abstractmethod
-from .retrieval_results import RetrievalResults, Query
+from aiko2.core.retrieval_results import RetrievalResults, Query
 import sentence_transformers
 import numpy as np
 import rank_bm25

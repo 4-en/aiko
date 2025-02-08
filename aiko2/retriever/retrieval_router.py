@@ -1,6 +1,6 @@
 from .base_retriever import BaseRetriever
 from aiko2.storage import SimpleMultiKnowledgeBase, KnowledgebaseQueryResult
-from .retrieval_results import RetrievalResults, Query, QueryResult, QueryType
+from aiko2.core.retrieval_results import RetrievalResults, Query, QueryResult, QueryType
 from aiko2.core import Conversation, Message
 import aiko2.pipeline.pipeline_components as pipeline_components
 from .ranking import BaseRanker

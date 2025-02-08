@@ -424,18 +424,23 @@ class RetrievalResults:
         The results of the retrieval operation, grouped by query.
     scoring_method: str
         The method used to score the results.
+    summaries: List[str]
+        The summaries of the results.
+        This can include context from the evaluator or summaries
+        based on the retrieved results.
     """
     
     ranker = None
     
     def __init__(self):
         if RetrievalResults.ranker is None:
-            from . import BaseRanker
+            from aiko2.retriever import BaseRanker
             RetrievalResults.ranker = BaseRanker
             
         self.results: dict[str, QueryResult] = {}
         self.scoring_method: str | None = None
         self._sources = {} # stores results by soure to avoid duplicates
+        self.summaries: list[str] = []
         
 
 

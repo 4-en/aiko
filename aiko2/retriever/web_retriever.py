@@ -1,5 +1,5 @@
-from . import RetrievalResults, QueryResult, BaseRetriever, Query
-from aiko2.core import Conversation
+from . import BaseRetriever
+from aiko2.core import Conversation, RetrievalResults, QueryResult, Query
 
 import re
 from bs4 import BeautifulSoup
