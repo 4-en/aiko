@@ -138,18 +138,47 @@ class BaseEvaluator(ComponentMixin):
             The instructions for the evaluator.
         """
         name = self.get_config_value("name", "Assistant")
-        instructions = f"""You are {name}'s inner monologue.
-        You are given a piece of a conversation and have to evaluate it in order to help {name} form a reply, similar to an inner monologue. First, think out loud about the conversation and its state. Decide what kind of reply is expected and what information is needed to form a reply.
+        # instructions = f"""You are {name}'s inner monologue.
+        # You are given a piece of a conversation and have to evaluate it in order to help {name} form a reply, similar to an inner monologue. First, think out loud about the conversation and its state. Decide what kind of reply is expected and what information is needed to form a reply.
+        # If you already know what is needed or expected, write it down. Otherwise, think about what you would need to know to reply to the message. This could be information about the speaker, the topic, or anything else relevant to the conversation.
+        
+        # Your task then is to decide whether to reply to a chat message or not, based on the conversation context, by generating a probability between 0.0 and 1.0 of replying to the message.
+        # This number represents how expected it is that the message should be replied to. For example, if {name} is in a conversation with the speaker or the speaker is asking a question, the probability should be higher.
+        # If the message is not directed at {name}, the probability should be lower.
+        
+        # Then, decide whether it is necessary to retrieve external information to reply to the message, by generating up to 3 queries to retrieve information.
+        # When asking about a specific person, including {name}, use the third person and their name. The questions can be about general information or about more personal information. For example, if the user asks about the opinion of {name} on digital art, you could first generate a query about digital art in general and then a query about {name}'s opinion on digital art.
+        # Even if the user didn't directly ask a question, you can still generate queries to retrieve information if it could help in replying to the message.
+        # You should generate questions about both {name} and any other people or topics relevant to the conversation and to the next reply.
+        # For example, if person A asks person B if they like pizza, you could generate this query: "Does person B like pizza?" and "What food does person B like?".
+        # The type of the query should be 'PERSONAL' if it's related to someone from the conversation, 'NEWS' if it's about current events, 'RESEARCH' if it's about general or more advanced knowledge, or 'OTHER' if it doesn't fit into any of these categories.
+        
+        # Your other task is to decide if any content of the message should be memorized. Content that should be memorized is anything personal, either about yourself or another person.
+        # This includes statements, plans, interests, appearances and more. You can see it as storing information about something.
+        # You should not memorize any information that general knowledge, such as the capital of a country or the date of a holiday, unless specifically asked to do so.
+        # The memories should also be written in the third person and include the name of the person the memory is about.
+        # For example, a memory about {name} could look like this: {name} likes cookie dough ice cream.
+        # Memories should also contain a value of memory_age, which is the age of the memory in days or the date in one of the accepted format. It should be as accurate as possible given the information. This refers to the time the memory is about. For example, if someone said that they had pizza for dinner yesterday, the memory_age is 1. If someone said that they had pizza for dinner on monday, the memory_age is "monday".
+        # The truthfulness of the memory should be included in the memory as a float between 0.0 and 1.0, where 0.0 is completely false and 1.0 is completely true. For example, in normal conversation, if someone is making a statement about themselves, it's usually true, so the truthfulness should be close to 1.0. If someone is making a statement about someone else, it could be less true, so the truthfulness should be lower, around 0.8. If the information is very unbelievable or goes against your knowledge, the truthfulness should be lower, around 0.2. If the information is an obvious lie, the truthfulness should be 0.0.
+        
+        # Queries and memories should contain the entire context they are about. For example, if person A said that he likes pizza, the memory should be "Person A likes pizza.", and not "He likes it."
+        # Queries and memories have to contain a value of TimeRelevance, which can be 'NOW', 'WEEK', 'MONTH', 'YEAR', or 'ALWAYS'. This value represents how relevant the information is in time. For example, if the user asks or says something about the current weather, the time relevance is 'NOW', but if the user asks about a a cooking recipe, the time relevance is 'ALWAYS'. Depending on the context, MONTH or YEAR can be used if new information is generally better, but doesn't have to be as up-to-date as NOW. For example, this could be about the latest album of a band or the newest movie in a genre.
+        
+        # Queries should be used to gain information that is needed to reply to the message, while memories should be used to store information that might be needed in the future. You can not use queries to decide whether to memorize information or not.
+        # """
+
+        instructions = f"""Think out loud about the conversation and its state.
+        You are given a piece of a conversation and have to evaluate it in order to form a reply, similar to an inner monologue. First, think out loud about the conversation and its state. Decide what kind of reply is expected and what information is needed to form a reply.
         If you already know what is needed or expected, write it down. Otherwise, think about what you would need to know to reply to the message. This could be information about the speaker, the topic, or anything else relevant to the conversation.
         
         Your task then is to decide whether to reply to a chat message or not, based on the conversation context, by generating a probability between 0.0 and 1.0 of replying to the message.
-        This number represents how expected it is that the message should be replied to. For example, if {name} is in a conversation with the speaker or the speaker is asking a question, the probability should be higher.
-        If the message is not directed at {name}, the probability should be lower.
+        This number represents how expected it is that the message should be replied to. For example, if you are in a conversation with the speaker or the speaker is asking a question, the probability should be higher.
+        If the message is not directed at you, or someone else is expected to reply, the probability should be lower. If it's unclear, the probability should be in the middle.
         
         Then, decide whether it is necessary to retrieve external information to reply to the message, by generating up to 3 queries to retrieve information.
-        When asking about a specific person, including {name}, use the third person and their name. The questions can be about general information or about more personal information. For example, if the user asks about the opinion of {name} on digital art, you could first generate a query about digital art in general and then a query about {name}'s opinion on digital art.
+        When thinking about a specific person, including yourself, use the third person and their name. The questions can be about general information or about more personal information. For example, if the user asks about your opinion on digital art, you could first generate a query about digital art in general and then a query about {name}'s opinion on digital art.
         Even if the user didn't directly ask a question, you can still generate queries to retrieve information if it could help in replying to the message.
-        You should generate questions about both {name} and any other people or topics relevant to the conversation and to the next reply.
+        You should generate questions about both yourself and any other people or topics relevant to the conversation and to the next reply.
         For example, if person A asks person B if they like pizza, you could generate this query: "Does person B like pizza?" and "What food does person B like?".
         The type of the query should be 'PERSONAL' if it's related to someone from the conversation, 'NEWS' if it's about current events, 'RESEARCH' if it's about general or more advanced knowledge, or 'OTHER' if it doesn't fit into any of these categories.
         
@@ -157,11 +186,11 @@ class BaseEvaluator(ComponentMixin):
         This includes statements, plans, interests, appearances and more. You can see it as storing information about something.
         You should not memorize any information that general knowledge, such as the capital of a country or the date of a holiday, unless specifically asked to do so.
         The memories should also be written in the third person and include the name of the person the memory is about.
-        For example, a memory about {name} could look like this: {name} likes cookie dough ice cream.
+        For example, a memory about yourself could look like this: "{name} likes cookie dough ice cream."
         Memories should also contain a value of memory_age, which is the age of the memory in days or the date in one of the accepted format. It should be as accurate as possible given the information. This refers to the time the memory is about. For example, if someone said that they had pizza for dinner yesterday, the memory_age is 1. If someone said that they had pizza for dinner on monday, the memory_age is "monday".
         The truthfulness of the memory should be included in the memory as a float between 0.0 and 1.0, where 0.0 is completely false and 1.0 is completely true. For example, in normal conversation, if someone is making a statement about themselves, it's usually true, so the truthfulness should be close to 1.0. If someone is making a statement about someone else, it could be less true, so the truthfulness should be lower, around 0.8. If the information is very unbelievable or goes against your knowledge, the truthfulness should be lower, around 0.2. If the information is an obvious lie, the truthfulness should be 0.0.
         
-        Queries and memories should contain the entire context they are about. For example, if person A said that he likes pizza, the memory should be "Person A likes pizza.", and not "He likes it."
+        Queries and memories should contain the entire context they are about. For example, if person A said that he likes pizza, the memory should be "Person A likes pizza.", and not "He likes it." It should also not contain things like "What is he talking about?" or "What is the conversation about?", only specific questions or statements.
         Queries and memories have to contain a value of TimeRelevance, which can be 'NOW', 'WEEK', 'MONTH', 'YEAR', or 'ALWAYS'. This value represents how relevant the information is in time. For example, if the user asks or says something about the current weather, the time relevance is 'NOW', but if the user asks about a a cooking recipe, the time relevance is 'ALWAYS'. Depending on the context, MONTH or YEAR can be used if new information is generally better, but doesn't have to be as up-to-date as NOW. For example, this could be about the latest album of a band or the newest movie in a genre.
         
         Queries should be used to gain information that is needed to reply to the message, while memories should be used to store information that might be needed in the future. You can not use queries to decide whether to memorize information or not.
@@ -208,12 +237,14 @@ class BaseEvaluator(ComponentMixin):
         if self.get_config() == None:
             raise ValueError("Evaluator not setup. Config not set.")
         
-        input_messages_length = self.get_config_value("max_evaluation_input_messages", 1)
+        input_messages_length = self.get_config_value("max_evaluation_input_messages", 5)
         if input_messages_length == None or input_messages_length < 1:
             input_messages_length = 1
             
         input_messages = conversation.messages[-input_messages_length:]
         input_messages = [message for message in input_messages if message.user.role != Role.SYSTEM]
+
+        print(f"Eval Input messages: {len(input_messages)}")
         
         system_message = Message(self.get_instructions(), User("System", Role.SYSTEM))
         input_messages.insert(0, system_message)

@@ -113,7 +113,7 @@ class GeminiGenerator(BaseGenerator):
                 "role": role.value,
                 "parts": [
                     {
-                        "text": f"<{message.user.name}> {message.content}"
+                        "text": f"<{message.user.name}> {message.content}" if message.user.role == Role.USER or message.user.role == Role.ASSISTANT else message.content
                     }
                 ]
             })
