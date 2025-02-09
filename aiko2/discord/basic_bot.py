@@ -28,7 +28,7 @@ class BasicDiscordBot(discord.Client):
         self.bot_user = User(self.pipeline.config.name, Role.ASSISTANT)
         self._generating = False
 
-        self.channel_blacklist = set()
+        self.channel_whitelist = set()
     
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
@@ -121,12 +121,12 @@ class BasicDiscordBot(discord.Client):
         if message.content.startswith('!toggle'):
             # toggle replies for this channel
             channel_id = message.channel.id
-            if channel_id in self.channel_blacklist:
-                self.channel_blacklist.remove(channel_id)
-                await message.channel.send('Replies enabled.')
+            if channel_id in self.channel_whitelist:
+                self.channel_whitelist.remove(channel_id)
+                await message.channel.send('Replies disabled for this channel.')
             else:
-                self.channel_blacklist.add(channel_id)
-                await message.channel.send('Replies disabled.')
+                self.channel_whitelist.add(channel_id)
+                await message.channel.send('Replies enabled for this channel.')
             return
         
         if message.content.startswith('!help'):
@@ -200,7 +200,7 @@ class BasicDiscordBot(discord.Client):
             
             channel_id = message.channel.id
 
-            if channel_id in self.channel_blacklist:
+            if channel_id not in self.channel_whitelist and not isinstance(message.channel, discord.DMChannel) and message.author != self.user and not self.user in message.mentions:
                 return
 
             user_id = message.author.id
