@@ -4,9 +4,9 @@ import discord
 from concurrent.futures import ThreadPoolExecutor
 from aiko2.core import Conversation, Message, User, Role, Memory, QueryType
 from aiko2.pipeline import Pipeline
-from aiko2.generator import OpenAIGenerator, Gemini15Flash8B, GPT4OMiniGenerator
+from aiko2.generator import OpenAIGenerator, Gemini15Flash8B, GPT4OMiniGenerator, DeepSeekR1DistillQwen7BGenerator, DeepSeekR1DistillQwen1_5BGenerator
 from aiko2.retriever import WebRetriever, MemoryRetriever, RetrievalRouter, query_type_routing_function, negated_routing_function
-from aiko2.evaluator import Gemini15Flash8BEvaluator
+from aiko2.evaluator import Gemini15Flash8BEvaluator, BaseEvaluator
 from aiko2.refiner import AikoRefiner
 from aiko2.utils import split_text
 import traceback
@@ -198,8 +198,12 @@ class BasicDiscordBot(discord.Client):
         router.add_retriever(web_retriever, negated_routing_function(query_type_routing_function([QueryType.PERSONAL]))) # only use web retriever for non-personal queries
         
         refiner = AikoRefiner()
+
+        generator = Gemini15Flash8B()
+        evaluator = BaseEvaluator(generator)
         
-        pipeline = Pipeline(Gemini15Flash8B(), retriever=router, evaluator=Gemini15Flash8BEvaluator(), memory_handler=memory_retriever, refiner=refiner)
+        # pipeline = Pipeline(Gemini15Flash8B(), retriever=router, evaluator=Gemini15Flash8BEvaluator(), memory_handler=memory_retriever, refiner=refiner)
+        pipeline = Pipeline(generator, retriever=router, evaluator=evaluator, memory_handler=memory_retriever, refiner=refiner)
         
         # setup discord bot
         token = os.getenv('DISCORD_SECRET')
