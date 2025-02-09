@@ -263,4 +263,41 @@ class BaseEvaluator(ComponentMixin):
         
         return evaluation
         
+    def summarize_retrieval(self, evaluation:Evaluation) -> str:
+        """
+        Summarize the retrieval for the evaluation.
+
+        Parameters
+        ----------
+        evaluation : Evaluation
+            The evaluation to summarize.
+
+        Returns
+        -------
+        str
+            The summary of the retrieval.
+        """
+        
+        queries = evaluation.queries
+        memories = evaluation.memories
+        context = evaluation.context
+        
+        summary = ""
+        
+        if len(queries) > 0:
+            summary += "Queries:\n"
+            for query in queries:
+                summary += f"{query}\n"
+        
+        if len(memories) > 0:
+            summary += "Memories:\n"
+            for memory in memories:
+                summary += f"{memory}\n"
+                
+        if len(context) > 0:
+            summary += "Context:\n"
+            for context_item in context:
+                summary += f"{context_item}\n"
+        
+        return summary
         

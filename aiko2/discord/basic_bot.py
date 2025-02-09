@@ -171,8 +171,18 @@ class BasicDiscordBot(discord.Client):
         # replace emotes in format <:name:id> or <a:name:id> with name
         client_emotes = self.emojis
         message = f" {message} "
+        punctuation = ['.', ',', '!', '?', ':', ';', '(', ')', '[', ']', '{', '}', '<', '>', '"', "'"]
+        # add spaces around punctuation
+        for p in punctuation:
+            message = message.replace(f'{p}', f' {p} ')
+
+        # replace emotes in format <:name:id> or <a:name:id> with name
         for emote in client_emotes:
             message = message.replace(f' {emote.name} ', f' {str(emote)} ')
+        
+        # revert spaces around punctuation
+        for p in punctuation:
+            message = message.replace(f' {p} ', f'{p}')
         return message[1:-1]
         
 
