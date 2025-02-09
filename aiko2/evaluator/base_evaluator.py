@@ -2,7 +2,7 @@ from aiko2.core import Conversation, Message, User, Role, Memory, TimeRelevance
 from dataclasses import dataclass, field
 import typing_extensions as typing
 from aiko2.generator.base_generator import BaseGenerator
-from aiko2.core import Query, QueryType
+from aiko2.core import Query, QueryType, RetrievalResults
 import json
 from aiko2.pipeline.pipeline_components import ComponentMixin
 from aiko2.utils import parse_timestamp
@@ -262,15 +262,31 @@ class BaseEvaluator(ComponentMixin):
             return evaluation
         
         return evaluation
+    
+    def get_summary_instructions(self) -> str:
+        """
+        Get the instructions for summarizing the evaluation.
+
+        Returns
+        -------
+        str
+            The instructions for summarizing the evaluation.
+        """
+        instruction =  """You are a summarizer. Your task is to create an answer and summary to a given set of questions and answers.
+        Your answer should be a continuous text that includes the necessary information to answer the questions, but not the questions themselves. If questions or answers are similar enough, you can combine into one information.
+        Answer in first person as if you are thinking out loud, based on the type of information. You should start with phrases like "I think", "I remember", "I know", "I read", "I heard", "I believe", or similar.
+        For example, if the questions are "What is the capital of France?" and "How many people live in France?", you could answer with "I remember the capital of France is Paris and I think around 67 million people live in France."""
+
+        return instruction
         
-    def summarize_retrieval(self, evaluation:Evaluation) -> str:
+    def summarize_retrieval(self, retrieval:RetrievalResults) -> str:
         """
         Summarize the retrieval for the evaluation.
 
         Parameters
         ----------
-        evaluation : Evaluation
-            The evaluation to summarize.
+        retrieval : RetrievalResults
+            The retrieval results.
 
         Returns
         -------
@@ -278,26 +294,26 @@ class BaseEvaluator(ComponentMixin):
             The summary of the retrieval.
         """
         
-        queries = evaluation.queries
-        memories = evaluation.memories
-        context = evaluation.context
+        if retrieval == None:
+            return None
         
-        summary = ""
+        if len(retrieval) == 0:
+            return None
         
-        if len(queries) > 0:
-            summary += "Queries:\n"
-            for query in queries:
-                summary += f"{query}\n"
+        question_str = ""
+        answer_str = ""
+
+        for queries in retrieval.results.values():
+            if len(queries) == 0:
+                continue
+            question_str += f"Q: {queries[0].query}\n"
+            answer_str += f"{queries[0].answer}\n\n"
+
+        context = f"{question_str}\n{answer_str}"
+        return context
+
         
-        if len(memories) > 0:
-            summary += "Memories:\n"
-            for memory in memories:
-                summary += f"{memory}\n"
-                
-        if len(context) > 0:
-            summary += "Context:\n"
-            for context_item in context:
-                summary += f"{context_item}\n"
+
         
-        return summary
+        
         

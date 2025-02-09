@@ -420,7 +420,7 @@ class RetrievalResults:
 
     Attributes
     ----------
-    results : Dict[str, QueryResults]
+    results : Dict[str, list[QueryResults]]
         The results of the retrieval operation, grouped by query.
     scoring_method: str
         The method used to score the results.
@@ -437,7 +437,7 @@ class RetrievalResults:
             from aiko2.retriever import BaseRanker
             RetrievalResults.ranker = BaseRanker
             
-        self.results: dict[str, QueryResult] = {}
+        self.results: dict[str, list[QueryResult]] = {}
         self.scoring_method: str | None = None
         self._sources = {} # stores results by soure to avoid duplicates
         self.summaries: list[str] = []
