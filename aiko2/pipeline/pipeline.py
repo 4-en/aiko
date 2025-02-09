@@ -278,11 +278,18 @@ class Pipeline(BasePipeline):
         if len(queries) > 0 and self.retriever:
             # queries = [query for query in queries if query and query.query_type != "PERSONAL"]
             # TODO: make better use of meta data
-            print(f"Retrieving information for queries: {queries}")
+            # print(f"Retrieving information for queries: {queries}")
             retrieved_info = self.retriever.retrieve(conversation, queries)
+            retrieved_info.purge(min_score=0.5, max_results=3)
             if len(retrieved_info) > 0:
-                retrieved_info.purge(min_score=0.5, max_results=3)
-                self._append_retrieval_results(conversation, retrieved_info)
+                print(f"Retrieved information: {retrieved_info}")
+                # self._append_retrieval_results(conversation, retrieved_info)
+                summary = self.evaluator.summarize_retrieval(retrieved_info, evaluator_context[0] if len(evaluator_context) > 0 else None)
+                print(f"Retrieved information: {summary}")
+                self._append_summary(conversation, summary)
+            else:
+                print("No information retrieved")
+
                 
         # add memories after retrieval
         if len(memories) > 0:
@@ -301,6 +308,26 @@ class Pipeline(BasePipeline):
             response = self.refiner.refine(conversation, response)
         
         return response
+    
+    def _append_summary(self, conversation: Conversation, summary: str):
+        """
+        Append a summary of the retrieved information to the conversation.
+
+        Parameters
+        ----------
+        conversation : Conversation
+            The conversation to append the summary to.
+        summary : str
+            The summary of the retrieved information to append to the conversation.
+        """
+        last_message = conversation.messages[-1]
+        conversation.messages = conversation.messages[:-1]
+
+        summary = f"<think> {summary} </think>"
+        message = Message(summary, User(self.config.name, Role.ASSISTANT))
+        conversation.messages.append(message)
+        conversation.messages.append(last_message)
+
     
     def _append_retrieval_results(self, conversation: Conversation, retrieved_info: RetrievalResults):
         """

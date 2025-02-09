@@ -1,4 +1,4 @@
-from aiko2.core import Conversation, Message, User, Role, Memory, TimeRelevance
+from aiko2.core import Conversation, Message, User, Role, Memory, TimeRelevance, RetrieverType
 from dataclasses import dataclass, field
 import typing_extensions as typing
 from aiko2.generator.base_generator import BaseGenerator
@@ -263,7 +263,7 @@ class BaseEvaluator(ComponentMixin):
         
         return evaluation
     
-    def get_summary_instructions(self) -> str:
+    def _get_summary_instructions(self) -> str:
         """
         Get the instructions for summarizing the evaluation.
 
@@ -272,14 +272,16 @@ class BaseEvaluator(ComponentMixin):
         str
             The instructions for summarizing the evaluation.
         """
-        instruction =  """You are a summarizer. Your task is to create an answer and summary to a given set of questions and answers.
+        name = self.get_config_value("name", "Assistant")
+        instruction =  f"""Your name is {name}. You are thinking and trying to order and summarize your thoughts. Your task is to create an answer and summary to a given set of questions and answers.
         Your answer should be a continuous text that includes the necessary information to answer the questions, but not the questions themselves. If questions or answers are similar enough, you can combine into one information.
         Answer in first person as if you are thinking out loud, based on the type of information. You should start with phrases like "I think", "I remember", "I know", "I read", "I heard", "I believe", or similar.
-        For example, if the questions are "What is the capital of France?" and "How many people live in France?", you could answer with "I remember the capital of France is Paris and I think around 67 million people live in France."""
+        For example, if the questions are "What is the capital of France?" and "How many people live in France?", you could answer with "I remember the capital of France is Paris and I think around 67 million people live in France.
+        Also repeat information of your previous answer and thoughts, if any, to summarize everything."""
 
         return instruction
         
-    def summarize_retrieval(self, retrieval:RetrievalResults) -> str:
+    def summarize_retrieval(self, retrieval:RetrievalResults, prev_summary:str=None) -> str:
         """
         Summarize the retrieval for the evaluation.
 
@@ -307,10 +309,41 @@ class BaseEvaluator(ComponentMixin):
             if len(queries) == 0:
                 continue
             question_str += f"Q: {queries[0].query}\n"
-            answer_str += f"{queries[0].answer}\n\n"
+            if queries[0].source != None:
+                source_str = ""
+                if queries[0].retriever_type == RetrieverType.MEMORY:
+                    source_str = "Memory"
+                elif queries[0].retriever_type == RetrieverType.WEB:
+                    url = queries[0].source
+                    title = queries[0].source_title
+                    source_str = f"Web: {title} ({url})"
+                else:
+                    source_str = queries[0].source
+                answer_str += f"{source_str}: {queries[0].result}\n\n"
+            else:
+                answer_str += f"{queries[0].result}\n\n"
 
         context = f"{question_str}\n{answer_str}"
-        return context
+
+        summary_conversation = Conversation()
+
+        instruction_message = Message(self._get_summary_instructions(), User("System", Role.SYSTEM))
+        summary_conversation.add_message(instruction_message)
+
+        if prev_summary != None:
+            prev_summary_message = Message(prev_summary, User(self.get_config_value("name", "Assistant"), Role.ASSISTANT))
+            summary_conversation.add_message(prev_summary_message)
+
+        context_message = Message(context, User("Context", Role.USER))
+        summary_conversation.add_message(context_message)
+
+
+        summary_message = self.generator.generate(summary_conversation)
+
+        if summary_message == None:
+            return None
+
+        return summary_message.content
 
         
 

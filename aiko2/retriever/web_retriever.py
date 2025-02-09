@@ -1,5 +1,5 @@
 from . import BaseRetriever
-from aiko2.core import Conversation, RetrievalResults, QueryResult, Query
+from aiko2.core import Conversation, RetrievalResults, QueryResult, Query, RetrieverType
 
 import re
 from bs4 import BeautifulSoup
@@ -195,9 +195,9 @@ class WebRetriever(BaseRetriever):
                 # scrape the content from the search results
                 scraped_data = scrape_websites_parallel(search_results, max_workers=10)
                 
-                for idx, (url, title, content) in enumerate(scraped_data, 1):
+                for idx, (url, title, content) in enumerate(scraped_data):
                     if contains_text(content, min_words=10):                
-                        query_result = QueryResult(content, query, source=url, retriever=self)
+                        query_result = QueryResult(content, query, source=url, retriever_type=RetrieverType.WEB, source_title=title)
                         retrieval_results.add_result(query_result)
             except Exception as e:
                 print(f"Failed to retrieve search results: {e}")

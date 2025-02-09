@@ -1,6 +1,6 @@
 from .base_retriever import BaseRetriever
 from aiko2.storage import SimpleMultiKnowledgeBase, KnowledgebaseQueryResult
-from aiko2.core.retrieval_results import RetrievalResults, Query, QueryResult
+from aiko2.core.retrieval_results import RetrievalResults, Query, QueryResult, RetrieverType
 from aiko2.core import Conversation, Message
 import aiko2.pipeline.pipeline_components as pipeline_components
 from .ranking import BaseRanker
@@ -157,7 +157,7 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
                     result=result.value,
                     query=query,
                     source=result.domain + "-" + result.key if result.domain is not None else result.key,
-                    retriever=self, 
+                    retriever_type=RetrieverType.MEMORY,
                     embedding=result.vector, 
                     score=result.score,
                     scoring_method="cosine"
