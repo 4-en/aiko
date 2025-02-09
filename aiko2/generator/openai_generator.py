@@ -34,7 +34,7 @@ class OpenAIRole(Enum):
     USER = "user"
     ASSISTANT = "assistant"
     DEVELOPER = "developer"
-    SYSTEM = "developer" # system was replaced with developer in the new API
+    SYSTEM = "system" # system was replaced with developer in the new API
 
 OPENAI_API_KEY_NAME = "OPENAI_API_KEY"    
 
@@ -43,19 +43,27 @@ class OpenAIGenerator(BaseGenerator):
     A generator that uses the OpenAI API to generate responses.
     """
     
-    def __init__(self, model: OpenAIModel=OpenAIModel.GPT4O):
+    def __init__(self, model: OpenAIModel | str =OpenAIModel.GPT4O, base_url: str=None, api_key_name: str=OPENAI_API_KEY_NAME):
         """
         Initialize the OpenAI generator.
         
         Parameters
         ----------
-        model : OpenAIModel, optional
+        model : OpenAIModel | str, optional
             The model to use for generating responses, by default OpenAIModel.GPT4O
-        role : OpenAIRole, optional
-            The role to use for generating responses, by default OpenAIRole.ASSISTANT
+            Can also be a string representing the model name.
+        base_url : str, optional
+            The base URL for the OpenAI API, by default None
+            Pass different URLs for OpenAI compatible APIs.
+        api_key_name : str, optional
+            The name of the environment variable that contains the OpenAI API key, by default OPENAI_API_KEY
         """
-        self.model = model
+        self.is_new_openai_api = model in [OpenAIModel.GPTO1, OpenAIModel.GPTO1_MINI, OpenAIModel.GPT4O_MINI, OpenAIModel.GPT4O]
+        self.model_name = model.value if isinstance(model, OpenAIModel) else model
         self.client = None
+        self.assistant = None
+        self.base_url = base_url
+        self.api_key_name = api_key_name
         
     def _setup_client(self):
         """
@@ -69,11 +77,12 @@ class OpenAIGenerator(BaseGenerator):
         
         
         # Retrieve the OpenAI API key from the .env file
-        API_KEY = self.getenv(OPENAI_API_KEY_NAME)
+        API_KEY = self.getenv(self.api_key_name)
         
         # Initialize the OpenAI client
         self.client = openai.OpenAI(
-            api_key=API_KEY
+            api_key=API_KEY,
+            base_url=self.base_url
         )
         
     def convert_conversation_to_input(self, conversation: Conversation) -> list[dict]:
@@ -96,12 +105,11 @@ class OpenAIGenerator(BaseGenerator):
             if message.user.role == Role.ASSISTANT:
                 role = OpenAIRole.ASSISTANT
             elif message.user.role == Role.SYSTEM:
-                role = OpenAIRole.DEVELOPER
+                role = OpenAIRole.DEVELOPER if self.is_new_openai_api else OpenAIRole.SYSTEM
                 
             messages.append({
                 "role": role.value,
-                "content": message.content,
-                "name": message.user.name
+                "content": message.user.name + ": " + message.content
             })
         return messages
     
@@ -149,7 +157,7 @@ class OpenAIGenerator(BaseGenerator):
             
         try:
             response = self.client.chat.completions.create(
-                model=self.model.value,
+                model=self.model_name,
                 messages=self.convert_conversation_to_input(conversation),
                 temperature=self.get_config_value("temperature", 1.0),
                 max_completion_tokens=self.get_config_value("max_generated_tokens", 200),
