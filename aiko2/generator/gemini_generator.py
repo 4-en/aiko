@@ -113,7 +113,7 @@ class GeminiGenerator(BaseGenerator):
                 "role": role.value,
                 "parts": [
                     {
-                        "text": message.user.name + ": " + message.content
+                        "text": f"<{message.user.name}> {message.content}"
                     }
                 ]
             })
@@ -139,10 +139,17 @@ class GeminiGenerator(BaseGenerator):
         Message
             The message generated.
         """
+        print(f"Name: {self.assistant.name}")
+        print(f"Output: {output}")
 
         # remove the assistant name from the output in case it was added by the model
-        if output.lower().startswith(self.get_config_value("name", "Assistant").lower()+":"):
-            output = output.replace(self.get_config_value("name", "Assistant")+":", "").strip()
+        if output.lower().startswith(self.assistant.name.lower()+":"):
+            length = len(self.assistant.name) + 1
+            output = output[length:].strip()
+        
+        if output.lower().startswith(f"<{self.assistant.name.lower()}>"):
+            length = len(self.assistant.name) + 2
+            output = output[length:].strip()
         message = Message(output, self.assistant)
         return message
     

@@ -108,7 +108,7 @@ class LlamaCppGenerator(BaseGenerator):
                 
             messages.append({
                 "role": role.value,
-                "content": message.user.name + ": " + message.content
+                "content": f"<{message.user.name}> {message.content}"
             })
         return messages
     
@@ -126,10 +126,14 @@ class LlamaCppGenerator(BaseGenerator):
         Message
             The message generated.
         """
-        # add this since openai sometimes adds the assistant name to the output
-        if output.startswith(self.assistant.name + ": "):
-            output = output[len(self.assistant.name) + 2:]
-
+        # remove the assistant name from the output in case it was added by the model
+        if output.lower().startswith(self.assistant.name.lower()+":"):
+            length = len(self.assistant.name) + 1
+            output = output[length:].strip()
+        
+        if output.lower().startswith(f"<{self.assistant.name.lower()}>"):
+            length = len(self.assistant.name) + 2
+            output = output[length:].strip()
         # if there is a </think> tag, seperate it
         cot = ""
         message = ""
@@ -141,6 +145,12 @@ class LlamaCppGenerator(BaseGenerator):
             else:
                 output = cot[0]
                 cot = ""
+
+        if output.startswith(self.assistant.name + ": "):
+            output = output[len(self.assistant.name) + 2:]
+
+        if output.startswith("<" + self.assistant.name + ">"):
+            output = output.replace("<" + self.assistant.name + ">", "").strip()
 
         message = Message(output, self.assistant)
         return message
