@@ -311,7 +311,7 @@ class AikoRefiner(BaseRefiner):
         new_content = pattern.sub(lambda x: self.replacement_func(x, selected_positions), content)
         
         # Apply un-refinement to the content
-        new_content = self.un_refine(new_content)
+        # new_content = self.un_refine(new_content)
         
         # Return the refined response
         return Message(new_content, response.user, response.timestamp)

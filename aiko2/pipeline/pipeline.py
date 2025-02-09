@@ -282,7 +282,6 @@ class Pipeline(BasePipeline):
             retrieved_info = self.retriever.retrieve(conversation, queries)
             retrieved_info.purge(min_score=0.5, max_results=3)
             if len(retrieved_info) > 0:
-                print(f"Retrieved information: {retrieved_info}")
                 # self._append_retrieval_results(conversation, retrieved_info)
                 summary = self.evaluator.summarize_retrieval(retrieved_info, evaluator_context[0] if len(evaluator_context) > 0 else None)
                 print(f"Retrieved information: {summary}")
@@ -323,7 +322,7 @@ class Pipeline(BasePipeline):
         last_message = conversation.messages[-1]
         conversation.messages = conversation.messages[:-1]
 
-        summary = f"<think> {summary} </think>"
+        summary = f"{summary}"
         message = Message(summary, User(self.config.name, Role.ASSISTANT))
         conversation.messages.append(message)
         conversation.messages.append(last_message)
