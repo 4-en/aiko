@@ -8,7 +8,6 @@ from aiko2.generator import BaseGenerator
 from aiko2.refiner import BaseRefiner
 from aiko2.retriever import BaseRetriever
 from aiko2.utils import get_storage_location
-import logging
 import os
 from dotenv import load_dotenv
 
@@ -259,13 +258,9 @@ class Pipeline(BasePipeline):
             try:
                 evaluation = self.evaluator.evaluate(conversation)
                 queries = evaluation.queries
-                logging.debug(f"Generated queries: {queries}")
                 evaluator_context = evaluation.context
-                logging.debug(f"Evaluator context: {evaluator_context}")
                 memories = evaluation.memories
-                logging.debug(f"Memories: {memories}")
                 reply_expectation = evaluation.reply_expectation
-                logging.debug(f"Reply expectation: {reply_expectation}")
                 if reply_expectation <= 0.3:
                     # TODO: NOTE: This is kinda arbitrary, maybe a better way to handle this
                     # would be to have a bunch of yes/no questions about the conversation
@@ -335,7 +330,6 @@ class Pipeline(BasePipeline):
         for result in reversed(query_results): # reversed so best results are last
             query_result = result.result
             if query_result and len(query_result) > 10:
-                logging.debug(f"Appending query result: {query_result}")
                 print(f"Appending query result: {query_result[:100]}... Score: {result.score}")
                 message = Message(query_result, User("INNER_MONOLOGUE", Role.USER))
                 conversation.messages.append(message)

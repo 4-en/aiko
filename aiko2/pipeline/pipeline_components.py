@@ -81,6 +81,17 @@ class ComponentMixin:
             The pipeline object
         """
         return self._pipeline
+    
+    def get_generator(self):
+        """
+        Get the generator object.
+        
+        Returns
+        -------
+        Generator
+            The generator object
+        """
+        return getattr(self._pipeline, "generator", None)
 
     def get_config(self) -> Config:
         """

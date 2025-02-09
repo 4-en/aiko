@@ -46,6 +46,9 @@ class BaseGenerator(ABC, pipeline_components.ComponentMixin):
     A generator generates a response based on the conversation.
     """
 
+    def __init__(self, accepts_images:bool=False):
+        self.accepts_images = accepts_images
+
     @abstractmethod
     def generate(self, conversation:Conversation) -> Message:
         """

@@ -6,7 +6,6 @@ from aiko2.config import Config
 from aiko2.retriever import WebRetriever
 
 from dotenv import load_dotenv
-import logging
 
 
 class CLI:
@@ -14,7 +13,7 @@ class CLI:
     Basic command line interface to rest RAG functions.
     """
     def run():
-        logging.basicConfig(level=logging.DEBUG)
+        # logging.basicConfig(level=logging.DEBUG)
 
         # Load environment variables
         load_dotenv()

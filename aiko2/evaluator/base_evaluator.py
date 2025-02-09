@@ -36,11 +36,15 @@ class BaseEvaluator(ComponentMixin):
     It generates one or more queries to retrieve information if needed.
     """
     
-    def __init__(self, generator:BaseGenerator):
+    def __init__(self, generator:BaseGenerator=None):
         self.generator = generator
 
     def _set_pipeline(self, pipeline):
         super()._set_pipeline(pipeline)
+
+        if not self.generator:
+            self.get_generator()
+
         if self.generator:
             self.generator._set_pipeline(pipeline)
     
