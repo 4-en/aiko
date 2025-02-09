@@ -11,6 +11,7 @@ from aiko2.refiner import AikoRefiner
 from aiko2.utils import split_text
 import traceback
 import asyncio
+import re
 
 class BasicDiscordBot(discord.Client):
     """
@@ -65,6 +66,7 @@ class BasicDiscordBot(discord.Client):
 
             if response:
                 content = response.content
+                content = await self.insert_emotes(content)
                 await self._send_message(channel, content)
 
         if self.message_queue:
@@ -140,7 +142,38 @@ class BasicDiscordBot(discord.Client):
             await message.channel.send(embed=embed)
             return
 
-        
+    async def replace_mentions(self, message:discord.Message, content:str) -> str:
+        """
+        Replace mentions in the message content with the user's display name.
+        """
+        for user in message.mentions:
+            name = user.display_name or user.nick or user.name
+            content = content.replace(f'<@!{user.id}>', name)
+        return content
+    
+    async def replace_emotes(self, content:str) -> str:
+        """
+        Replace emotes in the message content with the emote's name.
+        """
+        # replace emotes in format <:name:id> or <a:name:id> with name
+        emote_pattern = re.compile(r'<(a)?:\w+:\d+>')
+        for match in emote_pattern.finditer(content):
+            emote = match.group()
+            splits = emote.split(':')
+            name = splits[1]
+            content = content.replace(emote, name)
+        return content
+    
+    async def insert_emotes(self, message:str):
+        """
+        Insert emotes in the message content with the emote's name.
+        """
+        # replace emotes in format <:name:id> or <a:name:id> with name
+        client_emotes = self.emojis
+        message = f" {message} "
+        for emote in client_emotes:
+            message = message.replace(f' {emote.name} ', f' {str(emote)} ')
+        return message[1:-1]
         
 
     async def on_message(self, message:discord.Message):
@@ -164,15 +197,18 @@ class BasicDiscordBot(discord.Client):
             
             conversation = self.conversations.get(channel_id, Conversation())
             name =  message.author.display_name or message.author.nick or message.author.name or 'User'
+
+            content = await self.replace_mentions(message, message.content)
+            content = await self.replace_emotes(content)
             
             if message.author == self.user:
                 # add as bot message
-                message = Message(content=message.content, user=self.bot_user)
+                message = Message(content=content, user=self.bot_user)
                 conversation.add_message(message)
                 return
             
             user = User(name=name, role=Role.USER, id=str(user_id))
-            aiko_message = Message(content=message.content, user=user)
+            aiko_message = Message(content=content, user=user)
             conversation.add_message(aiko_message)
             self.conversations[channel_id] = conversation
 

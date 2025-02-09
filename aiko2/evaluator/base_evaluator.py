@@ -42,10 +42,11 @@ class BaseEvaluator(ComponentMixin):
     def _set_pipeline(self, pipeline):
         super()._set_pipeline(pipeline)
 
-        if not self.generator:
-            self.get_generator()
+        had_generator = self.generator != None
+        if not had_generator:
+            self.generator = self.get_generator()
 
-        if self.generator:
+        if had_generator and self.generator != None:
             self.generator._set_pipeline(pipeline)
     
 

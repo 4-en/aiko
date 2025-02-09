@@ -105,3 +105,24 @@ Notes
 - android app
 - GUI RAG pipeline builder
 - complex interactions between characters / characters acting without being prompted first (simulation/game)
+
+## Components
+
+### Pipeline
+The pipeline is the core of the system. It handles the retrieval and generation of messages. It is responsible for the following:
+- Accept input message
+- Evaluate message based on connversation context
+  - Set reply expectation (0-1)
+  - generate queries for retriever
+  - create memories based on new information in message
+  - call functions (TODO)
+    - eg. math, mood, increase/decrease relationship, etc.
+- Retrieve relevant information
+  - local
+  - web
+  - memories
+- Rerank and summarize retrieved information
+- Re-evaluate message based on retrieved information if necessary
+- Generate reply
+- Refine reply
+- Return reply

@@ -139,8 +139,6 @@ class GeminiGenerator(BaseGenerator):
         Message
             The message generated.
         """
-        print(f"Name: {self.assistant.name}")
-        print(f"Output: {output}")
 
         # remove the assistant name from the output in case it was added by the model
         if output.lower().startswith(self.assistant.name.lower()+":"):
