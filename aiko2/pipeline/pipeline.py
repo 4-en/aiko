@@ -319,13 +319,13 @@ class Pipeline(BasePipeline):
         summary : str
             The summary of the retrieved information to append to the conversation.
         """
-        last_message = conversation.messages[-1]
-        conversation.messages = conversation.messages[:-1]
+        # last_message = conversation.messages[-1]
+        # conversation.messages = conversation.messages[:-1]
 
         summary = f"{summary}"
         message = Message(summary, User(self.config.name, Role.ASSISTANT))
         conversation.messages.append(message)
-        conversation.messages.append(last_message)
+        #conversation.messages.append(last_message)
 
     
     def _append_retrieval_results(self, conversation: Conversation, retrieved_info: RetrievalResults):

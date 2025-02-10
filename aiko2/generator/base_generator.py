@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from aiko2.config import Config
 import aiko2.pipeline.pipeline_components as pipeline_components
 from dataclasses import dataclass, field
+from pydantic import BaseModel
 
 @dataclass
 class GeneratorConfig:
@@ -50,7 +51,7 @@ class BaseGenerator(ABC, pipeline_components.ComponentMixin):
         self.accepts_images = accepts_images
 
     @abstractmethod
-    def generate(self, conversation:Conversation) -> Message:
+    def generate(self, conversation:Conversation, context:str=None, response_format:BaseModel=None, **kwargs) -> Message:
         """
         Generate a response based on the conversation.
 
@@ -58,6 +59,13 @@ class BaseGenerator(ABC, pipeline_components.ComponentMixin):
         ----------
         conversation : Conversation
             The conversation to generate a response for.
+        context : str, optional
+            The context of the conversation. Can include retrieved information,
+            inner monologue, etc.
+        response_format : BaseModel, optional
+            The format of the model output.
+            If None, the output will be a string.
+            Otherwise, try to generate json output based on the model.
 
         Returns
         -------
@@ -65,6 +73,27 @@ class BaseGenerator(ABC, pipeline_components.ComponentMixin):
             The response generated.
         """
         pass
+    
+    def add_context_as_message(self, conversation: Conversation, context: str) -> Conversation:
+        """
+        Add the context as a message to the conversation.
+
+        Parameters
+        ----------
+        conversation : Conversation
+            The conversation to add the context to.
+        context : str
+            The context to add.
+
+        Returns
+        -------
+        Conversation
+            The conversation with the context added.
+        """
+        summary = f"{context}"
+        message = Message(summary, User(self.get_config_value("name", "Assistant"), Role.ASSISTANT))
+        conversation.messages.append(message)
+        return conversation
     
     @abstractmethod
     def convert_conversation_to_input(self, conversation:Conversation) -> any:
