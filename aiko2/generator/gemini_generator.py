@@ -174,17 +174,15 @@ class GeminiGenerator(BaseGenerator):
             if self.client is None:
                 raise ValueError("Gemini client not initialized.")
             
-        self.generation_config = genai.GenerationConfig(
+        generation_config = genai.GenerationConfig(
             temperature=1.3,
             top_k=40,
         )
-            
-        generation_config = self.generation_config
-        generation_config = generation_config.__dict__.copy()
         
         if response_format is not None:
-            generation_config['response_mime_type'] = "application/json"
-            generation_config['response_schema'] = response_format
+            generation_config.response_mime_type = "application/json"
+            generation_config.response_schema = response_format
+            generation_config.temperature = 1.0
                 
             
         try:

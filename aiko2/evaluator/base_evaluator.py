@@ -7,19 +7,42 @@ import json
 from aiko2.pipeline.pipeline_components import ComponentMixin
 from aiko2.utils import parse_timestamp
 from pydantic import BaseModel
+from enum import Enum
+
+"""Use this JSON schema:
+        QueryType = 'PERSONAL' | 'NEWS' | 'RESEARCH' | 'OTHER'
+        TimeRelevance = 'NOW' | 'WEEK' | 'MONTH' | 'YEAR' | 'ALWAYS'
+        MemoryAge = str # str in format #d for age in days, otherwise DD-MM-YYYY or DD-MM or YYYY or DD or name of the weekday or month
+        Memory = {'memory': str, 'person': str, 'topic': str, 'time_relevance': TimeRelevance, 'memory_age': MemoryAge, 'truthfulness': float} # the memory string should be in the third person and only contain the information, not the context (Yes: "Person A likes pizza.", No: "Person B said that A likes pizza.")
+        Query = {'query': str, 'topic': str, 'type': QueryType, 'time_relevance': TimeRelevance}
+        Evaluation = {'thoughts': str, 'reply_expectation': float, 'queries': list[Query], 'memories': list[Memory]}
+Return: Evaluation"""
+        
+class EvaluationResponseQueryType(Enum):
+    PERSONAL = "PERSONAL"
+    NEWS = "NEWS"
+    RESEARCH = "RESEARCH"
+    OTHER = "OTHER"
+    
+class EvaluationResponseTimeRelevance(Enum):
+    NOW = "NOW"
+    WEEK = "WEEK"
+    MONTH = "MONTH"
+    YEAR = "YEAR"
+    ALWAYS = "ALWAYS"
 
 
 class EvaluationResponseQuery(BaseModel):
     query: str
     topic: str
-    type: str
-    time_relevance: str
+    type: EvaluationResponseQueryType
+    time_relevance: EvaluationResponseTimeRelevance
     
 class EvaluationResponseMemory(BaseModel):
     memory: str
     person: str
     topic: str
-    time_relevance: str
+    time_relevance: EvaluationResponseTimeRelevance
     memory_age: str
     truthfulness: float
     
