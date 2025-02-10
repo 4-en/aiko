@@ -90,9 +90,15 @@ class BaseGenerator(ABC, pipeline_components.ComponentMixin):
         Conversation
             The conversation with the context added.
         """
-        summary = f"{context}"
-        message = Message(summary, User(self.get_config_value("name", "Assistant"), Role.ASSISTANT))
+        last_message = conversation.messages[-1]
+
+        summary = f"{context}\nI should probably reply to {last_message.user.name}... What was said again...?"
+        message = Message(summary, User("Thinking...", Role.ASSISTANT))
+        # insert the summary before the actual question
+        # otherwise, some models might not be able to attend to the actual question
+        # or interpret the summary as the message to respond to
         conversation.messages.append(message)
+        conversation.messages.append(last_message)
         return conversation
     
     @abstractmethod
