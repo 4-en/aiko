@@ -32,6 +32,25 @@ class TimeRelevance(Enum):
         else:
             return TimeRelevance.ALWAYS
         
+    
+    def __eq__(self, value):
+        return super().__eq__(value) or self.name == value
+    
+    def __gt__(self, value):
+        return self.value > value.value
+    
+    def __lt__(self, value):
+        return self.value < value.value
+    
+    def __ge__(self, value):
+        return self.value >= value.value
+    
+    def __le__(self, value):
+        return self.value <= value.value
+    
+    def __ne__(self, value):
+        return super().__ne__(value) and self.name != value
+        
     def time_decay(self, value: float, sec_since: float) -> float:
         """
         Calculate the decayed value of a memory based on the time since the memory was created.

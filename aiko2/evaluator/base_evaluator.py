@@ -376,8 +376,132 @@ class BaseEvaluator(ComponentMixin):
 
         return summary_message.content
 
-        
+    def _get_memory_instructions(self) -> str:
+        """
+        Get the instructions for memorizing information.
 
+        Returns
+        -------
+        str
+            The instructions for memorizing information.
+        """
+        
+        instruction = f"""You are managing and reordering a collection of statements, facts or memories. 
+        You will be given a list of memories. Then, your task is to decide how similar the memories are to each other. If two or more memories are similar or even include the same information, you should merge them into one memory by combining the information.
+        Memories should be written in the third person and include the name of the person the memory is about. If the memories are about different topics or different people, they should not be merged.
+        Before merging, you should first think out loud about your process and what you plan to do. If there are no memories that you think are similar enough, return an empty list.
+        
+        Use this json schema:
+        NewMemory = {'source_ids': list[int], 'memory': str}
+        Return: {'thoughts': str, 'new_memories': list[NewMemory]}"""
+
+        return instruction
+        
+    def merge_memories(self, memories:list[Memory]) -> list[Memory]:
+        """
+        Merge two lists of memories.
+
+        Parameters
+        ----------
+        memories : list[Memory]
+            A list of potential similar memories.
+
+        Returns
+        -------
+        list[Memory] | None
+            A new list of memories with similar memories merged.
+            None if no memories were merged.
+        """
+        
+        # only try to merge memories if they are about the same person
+        names = {}
+        for memory in memories:
+            name = memory.person.lower()
+            if name not in names:
+                names[name] = [memory]
+            else:
+                names[name].append(memory)
+          
+        removed_memories = []
+        new_memories = []
+        for name, memories in names.items():
+            if len(memories) < 2:
+                continue
+            
+            # assign id to memories
+            id_to_memory = {}
+            for i, memory in enumerate(memories):
+                id_to_memory[i] = memory
+                
+            # create the input message
+            request = {
+                "memories": [
+                    {
+                        "id": i,
+                        "memory": memory.memory
+                    }
+                    for i, memory in id_to_memory.items() if memory not in removed_memories
+                ]  
+            }
+            
+            if len(request["memories"]) < 2:
+                continue
+            
+            request_str = json.dumps(request)
+            
+            input_messages = [
+                Message(self._get_memory_instructions(), User("System", Role.SYSTEM)),
+                Message(request_str, User("User", Role.USER))
+            ]
+            input_conversation = Conversation(input_messages)
+            
+            output_message = self.generator.generate(input_conversation)
+            
+            if output_message == None:
+                continue
+            
+            output_str = output_message.content
+            
+            new_memories = []
+            
+            try:
+                json_output = json.loads(output_str)
+                new_memories = json_output.get("new_memories", [])
+            except json.JSONDecodeError:
+                print("Error decoding JSON output from generator.")
+                print(output_str)
+                continue
+            except Exception as e:
+                print("Error processing output from generator.")
+                print(e)
+                continue
+            
+            for new_memory in new_memories:
+                source_ids = new_memory.get("source_ids", [])
+                memory_str = new_memory.get("memory", "")
+                
+                if len(source_ids) < 2:
+                    continue
+                person = id_to_memory[source_ids[0]].person
+                topic = id_to_memory[source_ids[0]].topic
+                time_relevance = max([id_to_memory[source_id].time_relevance for source_id in source_ids])
+                truthfulness = sum([id_to_memory[source_id].truthfulness for source_id in source_ids]) / len(source_ids)
+                
+                merged_memory = Memory(memory_str, person, topic, time_relevance, truthfulness)
+                new_memories.append(merged_memory)
+                
+                for source_id in source_ids:
+                    removed_memories.append(id_to_memory[source_id])
+            
+        
+        if len(new_memories) == 0:
+            return None
+        
+        for memory in memories:
+            if memory not in removed_memories:
+                new_memories.append(memory)
+                
+        return new_memories
         
         
         
