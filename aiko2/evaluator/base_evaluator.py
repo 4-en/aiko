@@ -6,6 +6,28 @@ from aiko2.core import Query, QueryType, RetrievalResults
 import json
 from aiko2.pipeline.pipeline_components import ComponentMixin
 from aiko2.utils import parse_timestamp
+from pydantic import BaseModel
+
+
+class EvaluationResponseQuery(BaseModel):
+    query: str
+    topic: str
+    type: str
+    time_relevance: str
+    
+class EvaluationResponseMemory(BaseModel):
+    memory: str
+    person: str
+    topic: str
+    time_relevance: str
+    memory_age: str
+    truthfulness: float
+    
+class EvaluationResponse(BaseModel):
+    thoughts: str
+    reply_expectation: float
+    queries: list[EvaluationResponseQuery]
+    memories: list[EvaluationResponseMemory]
 
 class EvaluatorResponse(typing.TypedDict):
     """
@@ -175,12 +197,13 @@ class BaseEvaluator(ComponentMixin):
         This number represents how expected it is that the message should be replied to. For example, if you are in a conversation with the speaker or the speaker is asking a question, the probability should be higher.
         If the message is not directed at you, or someone else is expected to reply, the probability should be lower. If it's unclear, the probability should be in the middle.
         
-        Then, decide whether it is necessary to retrieve external information to reply to the message, by generating up to 3 queries to retrieve information.
+        Then, decide whether it is necessary to think about additional information to reply to the message, by generating up to 3 queries to retrieve information, either from your memory/feelings or from external sources.
+        If you don't need additional information, think the answer out loud.
         When thinking about a specific person, including yourself, use the third person and their name. The questions can be about general information or about more personal information. For example, if the user asks about your opinion on digital art, you could first generate a query about digital art in general and then a query about {name}'s opinion on digital art.
         Even if the user didn't directly ask a question, you can still generate queries to retrieve information if it could help in replying to the message.
         You should generate questions about both yourself and any other people or topics relevant to the conversation and to the next reply.
         For example, if person A asks person B if they like pizza, you could generate this query: "Does person B like pizza?" and "What food does person B like?".
-        The type of the query should be 'PERSONAL' if it's related to someone from the conversation, 'NEWS' if it's about current events, 'RESEARCH' if it's about general or more advanced knowledge, or 'OTHER' if it doesn't fit into any of these categories.
+        The type of the query should be 'PERSONAL' if it's related to you or someone from the conversation, 'NEWS' if it's about current events, 'RESEARCH' if it's about general or more advanced knowledge, or 'OTHER' if it doesn't fit into any of these categories.
         
         Your other task is to decide if any content of the message should be memorized. Content that should be memorized is anything personal, either about yourself or another person.
         This includes statements, plans, interests, appearances and more. You can see it as storing information about something.
@@ -208,7 +231,7 @@ class BaseEvaluator(ComponentMixin):
         format_instruction = """Use this JSON schema:
         QueryType = 'PERSONAL' | 'NEWS' | 'RESEARCH' | 'OTHER'
         TimeRelevance = 'NOW' | 'WEEK' | 'MONTH' | 'YEAR' | 'ALWAYS'
-        MemoryAge = Union[int, str] # int for days, str in format DD-MM-YYYY or DD-MM or DD or YYYY or name of the weekday or month
+        MemoryAge = str # str in format #d for age in days, otherwise DD-MM-YYYY or DD-MM or YYYY or DD or name of the weekday or month
         Memory = {'memory': str, 'person': str, 'topic': str, 'time_relevance': TimeRelevance, 'memory_age': MemoryAge, 'truthfulness': float} # the memory string should be in the third person and only contain the information, not the context (Yes: "Person A likes pizza.", No: "Person B said that A likes pizza.")
         Query = {'query': str, 'topic': str, 'type': QueryType, 'time_relevance': TimeRelevance}
         Evaluation = {'thoughts': str, 'reply_expectation': float, 'queries': list[Query], 'memories': list[Memory]}

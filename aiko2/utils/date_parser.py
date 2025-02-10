@@ -32,6 +32,18 @@ def parse_timestamp(timestamp: str | int) -> float:
         return float(timestamp)
     except ValueError:
         pass
+    
+    # check if timestamp is duration in days in format #d or #days
+    if timestamp.endswith("d"):
+        try:
+            return time.time() - int(timestamp[:-1]) * 86400
+        except ValueError:
+            pass
+    elif timestamp.endswith("days"):
+        try:
+            return time.time() - int(timestamp[:-4]) * 86400
+        except ValueError:
+            pass
 
     try:
         return time.mktime(time.strptime(timestamp, "%d-%m-%Y"))

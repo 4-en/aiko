@@ -66,6 +66,8 @@ class BaseGenerator(ABC, pipeline_components.ComponentMixin):
             The format of the model output.
             If None, the output will be a string.
             Otherwise, try to generate json output based on the model.
+        kwargs : dict
+            Additional keyword arguments for implementation-specific parameters.
 
         Returns
         -------

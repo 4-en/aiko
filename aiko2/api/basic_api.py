@@ -120,7 +120,7 @@ async def websocket_chat(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            timestamp = datetime.utcnow().isoformat()
+            timestamp = datetime.now().isoformat()
             conn = get_db_connection()
             cur = conn.cursor()
             cur.execute("INSERT INTO messages (content, timestamp) VALUES (?, ?)", (data, timestamp))

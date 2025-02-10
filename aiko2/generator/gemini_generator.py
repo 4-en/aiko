@@ -2,6 +2,7 @@ from .base_generator import BaseGenerator
 from aiko2.core import Conversation, Message, User, Role
 import google.generativeai as genai
 from enum import Enum
+from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
 
@@ -151,7 +152,7 @@ class GeminiGenerator(BaseGenerator):
         message = Message(output, self.assistant)
         return message
     
-    def generate(self, conversation, generation_config=None) -> Message:
+    def generate(self, conversation, context=None, response_format: BaseModel = None, **kwargs) -> Message:
         """
         Generate a response based on the conversation using the OpenAI API.
         
@@ -173,7 +174,18 @@ class GeminiGenerator(BaseGenerator):
             if self.client is None:
                 raise ValueError("Gemini client not initialized.")
             
-        generation_config = generation_config or self.generation_config
+        self.generation_config = genai.GenerationConfig(
+            temperature=1.3,
+            top_k=40,
+        )
+            
+        generation_config = self.generation_config
+        generation_config = generation_config.__dict__.copy()
+        
+        if response_format is not None:
+            generation_config['response_mime_type'] = "application/json"
+            generation_config['response_schema'] = response_format
+                
             
         try:
             safety_settings=[
@@ -201,7 +213,7 @@ class GeminiGenerator(BaseGenerator):
             response = self.client.generate_content(
                 contents=request,
                 safety_settings=safety_settings,
-                generation_config=generation_config
+                generation_config=generation_config,
             )
 
             return self.convert_output_to_message(response.text)

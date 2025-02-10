@@ -1,8 +1,10 @@
+import openai.resources
 from .base_generator import BaseGenerator
 from aiko2.core import Conversation, Message, User, Role
 import openai
 from enum import Enum
 from dotenv import load_dotenv
+from pydantic import BaseModel
 import os
 
 class OpenAIModel(Enum):
@@ -139,7 +141,7 @@ class OpenAIGenerator(BaseGenerator):
         message = Message(output, self.assistant)
         return message
     
-    def generate(self, conversation) -> Message:
+    def generate(self, conversation, context=None, response_format: BaseModel = None, **kwargs) -> Message:
         """
         Generate a response based on the conversation using the OpenAI API.
         
@@ -147,6 +149,16 @@ class OpenAIGenerator(BaseGenerator):
         ----------
         conversation : Conversation
             The conversation to generate a response for.
+        context : str, optional
+            The context of the conversation. Can include retrieved information,
+            inner monologue, etc.
+        response_format : BaseModel, optional
+            The format of the model output.
+            If None, the output will be a string.
+            Otherwise, try to generate json output based on the model.
+        kwargs : dict
+            Additional keyword arguments for openai.ChatCompletion.create.
+            Overwrites default and config values.
             
         Returns
         -------
@@ -167,6 +179,7 @@ class OpenAIGenerator(BaseGenerator):
                 messages=self.convert_conversation_to_input(conversation),
                 temperature=self.get_config_value("temperature", 1.0),
                 max_completion_tokens=self.get_config_value("max_generated_tokens", 200),
+                response_format=openai.NOT_GIVEN if response_format is None else response_format
             )
             return self.convert_output_to_message(response.choices[0].message.content)
         except Exception as e:

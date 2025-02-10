@@ -252,7 +252,7 @@ class Config(ConfigClass):
     cc_max_generated_tokens: str = "The maximum number of tokens to generate"
     max_generated_tokens: int = 256
     cc_temperature: str = "The temperature for sampling, higher values make the model more creative"
-    temperature: float = 0.7
+    temperature: float = 1.3
     cc_top_k: str = "The number of tokens to sample from, lower values make the model more conservative"
     top_k: int = 50
     cc_top_p: str = "The cumulative probability for nucleus sampling, higher values make the model more creative"
@@ -261,7 +261,7 @@ class Config(ConfigClass):
     cc_max_generated_queries: str = "The maximum number of queries to generate for information retrieval"
     max_generated_queries: int = 3
     cc_max_retrieved_info: str = "The last n messages of the conversation to use a context for query generation"
-    max_evaluation_input_messages: int = 5
+    max_evaluation_input_messages: int = 10
     
     
 def config_test():
