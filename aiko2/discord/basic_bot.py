@@ -12,6 +12,7 @@ from aiko2.utils import split_text
 import traceback
 import asyncio
 import re
+import time
 
 class BasicDiscordBot(discord.Client):
     """
@@ -29,9 +30,20 @@ class BasicDiscordBot(discord.Client):
         self._generating = False
 
         self.channel_whitelist = set()
+        self.recent_conversations: dict[int, float] = {}
+        self.recent_conversation_timeout = 60 * 2 # 2 minutes
     
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
+
+        # set presence
+        activity = discord.Activity(type=discord.ActivityType.playing,
+                                    name="dm me for a chat!",
+                                    details="lule",
+                                    platform="TempleOS",
+                                    buttons=["Ping", "Pong"])
+
+        await self.change_presence(activity=activity)
 
 
     async def _send_message(self, channel, content):
@@ -64,9 +76,10 @@ class BasicDiscordBot(discord.Client):
             response = await asyncio.get_event_loop().run_in_executor(self.executor, self.pipeline.generate, conversation)
             self._generating = False
 
-            if response:
+            if response and response.content and response.content.strip() != '':
                 content = response.content
                 content = await self.insert_emotes(content)
+                self.recent_conversations[channel.id] = time.time()
                 await self._send_message(channel, content)
 
         if self.message_queue:
@@ -200,7 +213,15 @@ class BasicDiscordBot(discord.Client):
             
             channel_id = message.channel.id
 
-            if channel_id not in self.channel_whitelist and not isinstance(message.channel, discord.DMChannel) and message.author != self.user and not self.user in message.mentions:
+            should_reply = (
+                channel_id in self.channel_whitelist or
+                isinstance(message.channel, discord.DMChannel) or
+                message.author == self.user or
+                self.user in message.mentions or
+                message.channel.id in self.recent_conversations and time.time() - self.recent_conversations[message.channel.id] < self.recent_conversation_timeout
+            )
+
+            if not should_reply:
                 return
 
             user_id = message.author.id
