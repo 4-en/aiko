@@ -212,18 +212,6 @@ class BasicDiscordBot(discord.Client):
 
             
             channel_id = message.channel.id
-
-            should_reply = (
-                channel_id in self.channel_whitelist or
-                isinstance(message.channel, discord.DMChannel) or
-                message.author == self.user or
-                self.user in message.mentions or
-                message.channel.id in self.recent_conversations and time.time() - self.recent_conversations[message.channel.id] < self.recent_conversation_timeout
-            )
-
-            if not should_reply:
-                return
-
             user_id = message.author.id
             
             conversation = self.conversations.get(channel_id, Conversation())
@@ -242,6 +230,17 @@ class BasicDiscordBot(discord.Client):
             aiko_message = Message(content=content, user=user)
             conversation.add_message(aiko_message)
             self.conversations[channel_id] = conversation
+
+            should_reply = (
+                channel_id in self.channel_whitelist or
+                isinstance(message.channel, discord.DMChannel) or
+                message.author == self.user or
+                self.user in message.mentions or
+                message.channel.id in self.recent_conversations and time.time() - self.recent_conversations[message.channel.id] < self.recent_conversation_timeout
+            )
+
+            if not should_reply:
+                return
 
             if not self._generating:
                 await self._generate_reply(message.channel, conversation.copy())
