@@ -8,6 +8,15 @@ def parse_docstring(docstring: str) -> tuple[str, dict[str, str]]:
     """
     Parses a docstring to extract the function description and parameter descriptions.
     Supports Numpy-style, Google-style, and Sphinx-style docstrings.
+    
+    Parameters
+    ----------
+    docstring : str
+        The docstring to parse.
+        
+    Returns
+    -------
+    tuple[str, dict[str, str]]
     """
     if not docstring:
         raise ValueError("Docstring is required for function parsing.")
@@ -26,7 +35,7 @@ def parse_docstring(docstring: str) -> tuple[str, dict[str, str]]:
             param_section = True
             continue
         
-        if line.lower().startswith("return") or line.lower().startswith("returns"):
+        if line.lower().startswith("return") or line.lower().startswith("raises") or line.lower().startswith("yields") or line.lower().startswith("returns"):
             break
         
         if param_section:
@@ -77,6 +86,20 @@ def parse_docstring(docstring: str) -> tuple[str, dict[str, str]]:
     return description, param_descs
 
 def convert_functions_to_tools(functions: List[Callable]) -> List[Dict[str, Any]]:
+    """
+    Converts a list of functions to tools in OpenAI-like API format.
+    
+    Parameters
+    ----------
+    functions : list[Callable]
+        The functions to convert.
+        The functions must have type hints and a docstring in numpy, google, or sphinx style.
+        
+    Returns
+    -------
+    list[dict]
+        The list of tools in OpenAI-like API format.
+    """
     tools = []
     
     for func in functions:
@@ -156,19 +179,52 @@ def convert_functions_to_tools(functions: List[Callable]) -> List[Dict[str, Any]
 
 @dataclass
 class ToolParameter:
+    """
+    A parameter for a tool.
+    
+    Attributes
+    ----------
+    name : str
+        The name of the parameter.
+    type : str
+        The type of the parameter.
+    description : str
+        The description of the parameter.
+    """
+    
     name: str
     type: str
     description: str
 
 @dataclass
 class ManualTool:
+    """
+    A manual tool for a toolbox.
+    
+    Attributes
+    ----------
+    name : str
+        The name of the tool.
+    function : Callable
+        The function of the tool.
+    description : str
+        The description of the tool.
+    parameters : List[ToolParameter]
+        The parameters of the tool.
+    """
     name: str
+    function: Callable
     description: str
     parameters: List[ToolParameter]
     
     def to_dict(self) -> Dict[str, Any]:
         """
         Converts the ManualTool instance into the expected tool format.
+        
+        Returns
+        -------
+        dict
+            The tool as a dictionary.
         """
         return {
             "type": "function",
@@ -184,6 +240,156 @@ class ManualTool:
                 "strict": True
             }
         }
+        
+@dataclass
+class Toolbox:
+    """
+    A toolbox for storing and managing tools.
+    
+    Attributes
+    ----------
+    tools : dict[str, ManualTool | Callable]
+        The tools in the toolbox.
+    """
+    
+    tools: dict[str, ManualTool | Callable]
+    
+    def add_tool(self, tool: ManualTool | Callable):
+        """
+        Adds a tool to the toolbox.
+        
+        Parameters
+        ----------
+        tool : ManualTool | Callable
+            The tool to add.
+            If a callable function is provided, it needs to have type hints and a docstring in numpy, google, or sphinx style.
+            
+        """
+        if isinstance(tool, ManualTool):
+            self.tools[tool.name] = tool
+        elif callable(tool):
+            # check if the function can be converted to a tool
+            _ = convert_functions_to_tools([tool])
+            self.tools[tool.__name__] = tool
+        else:
+            raise ValueError("Invalid tool type. Must be a ManualTool or a callable function.")
+        
+    def remove_tool(self, tool_name: str):
+        """
+        Removes a tool from the toolbox.
+        
+        Parameters
+        ----------
+        tool_name : str
+            The name of the tool to remove.
+        """
+        
+        if tool_name in self.tools:
+            del self.tools[tool_name]
+        else:
+            raise ValueError(f"Tool '{tool_name}' not found in toolbox.")
+        
+    def get_tool(self, tool_name: str) -> ManualTool | Callable:
+        """
+        Retrieves a tool from the toolbox.
+        
+        Parameters
+        ----------
+        tool_name : str
+            The name of the tool to retrieve.
+            
+        Returns
+        -------
+        ManualTool | Callable
+            The tool retrieved.
+        """
+        if tool_name in self.tools:
+            return self.tools[tool_name]
+        else:
+            raise ValueError(f"Tool '{tool_name}' not found in toolbox.")
+        
+    def get_tools(self) -> list[dict]:
+        """
+        Converts the toolbox into a list of tools as dicts for OpenAI-like APIs.
+        
+        Returns
+        -------
+        list[dict]
+            The list of tools as dicts.
+        """
+        
+        tools = []
+        for tool_name in self.tools.keys():
+            if isinstance(self.tools[tool_name], ManualTool):
+                tools.append(self.tools[tool_name].to_dict())
+            else:
+                tools.extend(convert_functions_to_tools([self.tools[tool_name]]))
+                
+        return tools
+        
+    def call_tool(self, tool_call: dict):
+        """
+        Calls a tool in the toolbox.
+        
+        OpenAI API returns a list of tool calls in the following format:
+        
+        {
+            "id": "call_12345xyz",
+            "type": "function",
+            "function": {
+                "name": "get_weather",
+                "arguments": "{\"location\":\"Paris, France\"}"
+            }
+        }
+        
+        
+        If the return value is not None, it will be converted to a string and
+        returned to the API.
+        For example, the function get_weather(location: str) should probably return a string like this:
+        
+        "The current temperature in Paris, France is 25°C."
+        
+        
+        Parameters
+        ----------
+        tool_call : dict
+            The tool call as received from an API.
+            Must include the tool name and parameters.
+            
+        Returns
+        -------
+        Any
+            The result of the tool call.
+        """
+        
+        tool_function = None
+        tool_name = tool_call.get("function", {}).get("name", None)
+        if not tool_name:
+            raise ValueError("Tool name not provided in tool call.")
+        
+        if tool_name in self.tools:
+            tool = self.tools[tool_name]
+            if isinstance(tool, ManualTool):
+                tool_function = tool.function
+            else:
+                tool_function = tool
+                
+        if not tool_function:
+            raise ValueError(f"Tool '{tool_name}' not found in toolbox.")
+        
+        tool_args = tool_call.get("function", {}).get("arguments", {})
+        if not tool_args:
+            raise ValueError("Tool arguments not provided in tool call.")
+        
+        try:
+            args = json.loads(tool_args)
+        except json.JSONDecodeError:
+            raise ValueError("Invalid tool arguments provided.")
+        
+        return tool_function(**args)
+        
+        
+        
 
 if __name__ == "__main__":
     # Example function
@@ -213,6 +419,7 @@ if __name__ == "__main__":
     # Example of manually creating a tool
     tools.append(ManualTool(
         name="get_forecast",
+        function=lambda city: f"Get weather forecast for {city}.",
         description="Get weather forecast for a given city.",
         parameters=[
             ToolParameter(name="city", type="string", description="City name"),
