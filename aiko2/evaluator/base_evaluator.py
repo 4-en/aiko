@@ -229,9 +229,10 @@ class BaseEvaluator(ComponentMixin):
         The type of the query should be 'PERSONAL' if it's related to you or someone from the conversation, 'NEWS' if it's about current events, 'RESEARCH' if it's about general or more advanced knowledge, or 'OTHER' if it doesn't fit into any of these categories.
         Don't generate queries about basic common knowledge or the conversation context itself, only about specific information that could be useful for replying.
         
-        Your other task is to decide if any content of the message should be memorized. Content that should be memorized is anything personal, either about yourself or another person.
+        Your other task is to decide if any content of the message should be memorized. Content that should be memorized is anything personal, either about yourself or another person, or new knowledge that could be useful in the future.
         This includes statements, plans, interests, appearances and more. You can see it as storing information about something.
-        You should not memorize any information that general knowledge, such as the capital of a country or the date of a holiday, unless specifically asked to do so.
+        You should not memorize any information that very general knowledge, such as the capital of a country or the date of a holiday, unless specifically asked to do so.
+        Something that is more specific or something you didn't know yet, even if it's not something personal, should be memorized by using 'GENERAL' as the type and 'NONE' as the person.
         The memories should also be written in the third person and include the name of the person the memory is about.
         For example, a memory about yourself could look like this: "{name} likes cookie dough ice cream."
         Memories should also contain a value of memory_age, which is the age of the memory in days or the date in one of the accepted format. It should be as accurate as possible given the information. This refers to the time the memory is about. For example, if someone said that they had pizza for dinner yesterday, the memory_age is 1. If someone said that they had pizza for dinner on monday, the memory_age is "monday".
@@ -256,7 +257,8 @@ class BaseEvaluator(ComponentMixin):
         QueryType = 'PERSONAL' | 'NEWS' | 'RESEARCH' | 'OTHER'
         TimeRelevance = 'NOW' | 'WEEK' | 'MONTH' | 'YEAR' | 'ALWAYS'
         MemoryAge = str # str in format #d for age in days, otherwise DD-MM-YYYY or DD-MM or YYYY or DD or name of the weekday or month
-        Memory = {'memory': str, 'person': str, 'topic': str, 'time_relevance': TimeRelevance, 'memory_age': MemoryAge, 'truthfulness': float} # the memory string should be in the third person and only contain the information, not the context (Yes: "Person A likes pizza.", No: "Person B said that A likes pizza.")
+        MemoryType = 'PERSONAL' | 'GENERAL'
+        Memory = {'memory': str, type: MemoryType, 'person': str | 'NONE', 'topic': str, 'time_relevance': TimeRelevance, 'memory_age': MemoryAge, 'truthfulness': float} # the memory string should be in the third person and only contain the information, not the context (Yes: "Person A likes pizza.", No: "Person B said that A likes pizza.") If the memory is more general knowledge, use 'GENERAL' as the type and 'NONE' as the person.
         Query = {'query': str, 'topic': str, 'type': QueryType, 'time_relevance': TimeRelevance}
         Evaluation = {'thoughts': str, 'reply_expectation': float, 'queries': list[Query], 'memories': list[Memory]}
         Return: Evaluation"""
