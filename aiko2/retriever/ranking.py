@@ -427,3 +427,44 @@ class MultiQARanker(BaseRanker):
         scores = util.dot_score(query_embedding, result_embeddings).cpu().tolist()
         return scores
         
+@register_ranker("snowflake-arctic-embed-m-2")
+class SnowflakeArtcicEmbedM2Ranker(MultiQARanker):
+    """
+    A ranker using the Snowflake Arctic Embed M2 model.
+    """
+
+    arctic_embedder = None
+    
+    def get_embedder(self) -> SentenceTransformer:
+        if SnowflakeArtcicEmbedM2Ranker.arctic_embedder is None:
+            SnowflakeArtcicEmbedM2Ranker.arctic_embedder = SentenceTransformer('Snowflake/snowflake-arctic-embed-m-v2.0', trust_remote_code=True)
+
+        return SnowflakeArtcicEmbedM2Ranker.arctic_embedder
+    
+    def _embed_text(self, text:str | list[str]) -> np.ndarray:
+        embedder = self.get_embedder()
+        return embedder.encode(text)
+    
+    def _embed_query(self, query: str) -> np.ndarray:
+        embedder = self.get_embedder()
+        return embedder.encode(query, prompt_name='query')
+    
+    def _calculate_scores(self, query_embedding, result_embeddings):
+        model = self.get_embedder()
+        scores = model.similarity(query_embedding, result_embeddings)
+        return scores
+    
+    def rank_results(self, query: Query, results: list[str]) -> list[RankerResult]:
+        
+        ranked_results = []
+        
+        embedder = self.get_embedder()
+        query_embedding = embedder.encode(query.query, prompt_name='query')
+        result_embeddings = embedder.encode(results)
+        
+        scores = self._calculate_scores(query_embedding, result_embeddings)
+
+        for score, result_embedding in zip(scores, result_embeddings):
+            ranked_results.append(RankerResult(score, result_embedding))
+            
+        return ranked_results
