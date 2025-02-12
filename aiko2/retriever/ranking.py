@@ -403,7 +403,7 @@ class MultiQARanker(BaseRanker):
         
         ranked_results = []
         
-        embedder = MultiQARanker.get_embedder()
+        embedder = self.get_embedder()
         query_embedding = embedder.encode(query.query)
         result_embeddings = embedder.encode(results)
         

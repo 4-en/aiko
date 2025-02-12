@@ -221,6 +221,8 @@ class Pipeline(BasePipeline):
         instruction = self.config.instructions
         if not instruction:
             instruction = "You are a helpful AI assistant. Please provide useful information to the user."
+
+        instruction += "\n\nOnly respond with direct speech. Don't include thoughts, inner monologue or actions in your response."
         
         return Message(instruction, User("System", Role.SYSTEM))
         
@@ -321,6 +323,12 @@ class Pipeline(BasePipeline):
         # Generate response
         # print(f"Request: {conversation}")
         response = self.generator.generate(conversation)
+
+        # remove quotation marks around the response if they are the first and last characters
+        marks = ['"', "'"]
+        if response and response.content and response.content[0] in marks and response.content[-1] in marks:
+            response.content = response.content[1:-1]
+
         
         # Refine response
         if self.refiner:
