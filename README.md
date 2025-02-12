@@ -80,36 +80,30 @@ Notes
   - **Relationships** (with users and other characters)
   - **Memory** (long-term and short-term)
   - **Activities** (e.g., reading, watching, playing)
- 
-
-## Improvements to 1.0
-- use more complex model as a base
-- use llm api (eg openai)
-- later, test different local approaches and fine-tune using LoRA
-- improve training data and training process
-- use RAG to access long term memory
-- use text to speech for audio output
-- add inputs for audio/video
-- run using fastapi for better integration 
+- **Audio Input/Output** for voice-based interactions
+- **Real Time Visual Input** for thinking/commentating on images/videos
 
 ## Progress
 - [x] create basic api to reply to messages
 - [x] integrate api into discord
-- [x] use openai api for replies (no finetuning)
+- [x] use openai (or other) api for replies (no finetuning)
+- [x] use local LLM for replies
 - [ ] finetune openai model
 - [ ] integrate web ui
 - [x] integrate RAG
 - [x] memory system
-- [ ] train and use local LLM
+- [ ] finetune local model
 - [ ] full character creation using config files
 - [ ] logging for all relevant components to improve future quality
 
-## Unlikely
+## Some Ideas
 - GUI with Qt
 - Desktop companion
 - android app
 - GUI RAG pipeline builder
 - complex interactions between characters / characters acting without being prompted first (simulation/game)
+- character creation tool
+- game with npc's that can be interacted with
 
 ## Components
 
