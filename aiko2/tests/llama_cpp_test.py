@@ -12,6 +12,8 @@ def manual_inference():
         flash_attn=True
     )
 
+    print(llm.chat_format)
+
     print("Model loaded. Enter prompts to generate completions.")
     print("Enter 'exit' to quit.")
 
@@ -131,6 +133,6 @@ def test_basic_completion():
 
 
 if __name__ == "__main__":
-    test_chat_completion()
+    #test_chat_completion()
     # test_basic_completion()
-    # manual_inference()
+    manual_inference()
