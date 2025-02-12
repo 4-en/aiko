@@ -283,7 +283,11 @@ class Pipeline(BasePipeline):
             retrieved_info.purge(min_score=0.5, max_results=3)
             if len(retrieved_info) > 0:
                 # self._append_retrieval_results(conversation, retrieved_info)
-                summary = self.evaluator.summarize_retrieval(retrieved_info, evaluator_context[0] if len(evaluator_context) > 0 else None)
+                user_message = conversation.messages[-1]
+                user_message_content = f"I remember {user_message.user.name} said:\n\"{user_message.content}\""
+                if len(evaluator_context) > 0:
+                    user_message_content = f"{user_message_content}\n\n{evaluator_context[0]}"
+                summary = self.evaluator.summarize_retrieval(retrieved_info, user_message_content)
                 print(f"Retrieved information: {summary}")
                 self._append_summary(conversation, summary)
             else:

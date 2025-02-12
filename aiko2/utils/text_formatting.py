@@ -37,7 +37,7 @@ def split_text(text:str, max_length=1000) -> list[str]:
         good_chunks.append(text)
         return good_chunks
 
-def chunk_text(text: str, chunk_size: int=1000, overlap: int=500, prefix: str='...', suffix: str='...') -> list[str]:
+def chunk_text(text: str, chunk_size: int=1000, overlap: int=500, prefix: str='...', suffix: str='...') -> list[(str, str)]:
     """
     Split a long text into smaller chunks with a given size and overlap.
     
@@ -56,8 +56,8 @@ def chunk_text(text: str, chunk_size: int=1000, overlap: int=500, prefix: str='.
     
     Returns
     -------
-    list[str]
-        A list of smaller chunks of text.
+    list[(str, str)]
+        A list of smaller chunks of text and their chunk as a string in form of [start:end].
     """
     chunks = []
     for i in range(0, len(text), chunk_size - overlap):
@@ -66,5 +66,5 @@ def chunk_text(text: str, chunk_size: int=1000, overlap: int=500, prefix: str='.
             chunk = prefix + chunk
         if i + chunk_size < len(text):
             chunk += suffix
-        chunks.append(chunk)
+        chunks.append((chunk, f"[{i}:{i+chunk_size}]"))
     return chunks

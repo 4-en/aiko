@@ -190,10 +190,9 @@ class QueryResult:
             return [self]
         
         text_parts = chunk_text(self.result, chunk_size, overlap)
-        query_parts = [QueryResult(text_part, self.query) for text_part in text_parts]
+        query_parts = [QueryResult(text_part, self.query, source=source) for text_part, source in text_parts]
         for i, query_part in enumerate(query_parts):
             query_part.add_parent(self, i)
-            query_part.source = self.source
             query_part.retriever_type = self.retriever_type
             query_part.source_title = self.source_title
             
@@ -232,7 +231,7 @@ class RetrievalResults:
 
 
     
-    def add_result(self, query_result: QueryResult, was_split: bool=False):
+    def add_result(self, query_result: QueryResult):
         """
         Add a result to the retrieval results.
         
@@ -242,7 +241,7 @@ class RetrievalResults:
             The result to add.
         """
         
-        if query_result.source in self._sources and not was_split:
+        if query_result.source in self._sources:
             # Avoid duplicates
             return
             
@@ -253,7 +252,7 @@ class RetrievalResults:
             # Split long results into smaller parts
             query_parts = query_result.chunk_result(1500, 500)
             for query_part in query_parts:
-                self.add_result(query_part, was_split=True)
+                self.add_result(query_part)
             return
         
         if query_result.query.query_id not in self.results:

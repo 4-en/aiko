@@ -227,6 +227,7 @@ class BaseEvaluator(ComponentMixin):
         You should generate questions about both yourself and any other people or topics relevant to the conversation and to the next reply.
         For example, if person A asks person B if they like pizza, you could generate this query: "Does person B like pizza?" and "What food does person B like?".
         The type of the query should be 'PERSONAL' if it's related to you or someone from the conversation, 'NEWS' if it's about current events, 'RESEARCH' if it's about general or more advanced knowledge, or 'OTHER' if it doesn't fit into any of these categories.
+        Don't generate queries about basic common knowledge or the conversation context itself, only about specific information that could be useful for replying.
         
         Your other task is to decide if any content of the message should be memorized. Content that should be memorized is anything personal, either about yourself or another person.
         This includes statements, plans, interests, appearances and more. You can see it as storing information about something.
@@ -350,10 +351,11 @@ class BaseEvaluator(ComponentMixin):
             The instructions for summarizing the evaluation.
         """
         name = self.get_config_value("name", "Assistant")
-        instruction =  f"""Your name is {name}. You are thinking and trying to order and summarize your thoughts. Your task is to create an answer and summary to a given set of questions and answers.
+        instruction =  f"""Your name is {name}. You are thinking and trying to order and summarize your thoughts. Your task is to create an answer and summary to a given set of questions and answers, alongside the message you are responding to.
         Your answer should be a continuous text that includes the necessary information to answer the questions, but not the questions themselves. If questions or answers are similar enough, you can combine into one information.
         Answer in first person as if you are thinking out loud, based on the type of information. You should start with phrases like "I think", "I remember", "I know", "I read", "I heard", "I believe", or similar.
         For example, if the questions are "What is the capital of France?" and "How many people live in France?", you could answer with "I remember the capital of France is Paris and I think around 67 million people live in France.
+        Don't include any information that is not relevant or adds value to the questions or the context of the conversation.
         Also repeat information of your previous answer and thoughts, if any, to summarize everything."""
 
         return instruction
