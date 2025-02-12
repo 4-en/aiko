@@ -279,8 +279,12 @@ class Pipeline(BasePipeline):
             # queries = [query for query in queries if query and query.query_type != "PERSONAL"]
             # TODO: make better use of meta data
             # print(f"Retrieving information for queries: {queries}")
+
+            for query in queries:
+                print(f"Query: {query.query}, Type: {query.query_type}, {query.time_relevance}")
+
             retrieved_info = self.retriever.retrieve(conversation, queries)
-            retrieved_info.purge(min_score=0.5, max_results=3)
+            retrieved_info.purge(min_score=0.6, max_results=3)
             if len(retrieved_info) > 0:
                 # self._append_retrieval_results(conversation, retrieved_info)
                 user_message = conversation.messages[-1]
@@ -290,8 +294,20 @@ class Pipeline(BasePipeline):
                 summary = self.evaluator.summarize_retrieval(retrieved_info, user_message_content)
                 print(f"Retrieved information: {summary}")
                 self._append_summary(conversation, summary)
+
+                # TODO:NOTE: consider adding all "thoughts" based on retrieved information to character memories
+                # for example, if the AI thinks about something, it should be added to the memory
+                # this way, the AI can remember what it thought about and why it thought that way
+                # it could improve the AI's retrieval of information and reasoning. Kinda like learning from experience.
+                # Possible downside: This could lead to the AI remembering a lot of irrelevant information or creating
+                # duplicate memories. Maybe a way to filter out irrelevant or duplicate memories?
+                # Also a way to "forget" memories that are no longer relevant or useful or proven wrong.
+                # To remove false memories, we'd need a system to find contradictions in memories. Then we could decide
+                # which memory is more likely to be true based on other memories or external information (generate queries and search web).
+                # The hard part is probably finding contradictions in memories. Just similarity search might work, but not sure how well...
+            
             else:
-                print("No information retrieved")
+                print(f"No relevant information found.")
 
                 
         # add memories after retrieval

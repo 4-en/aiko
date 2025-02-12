@@ -186,7 +186,7 @@ class WebRetriever(BaseRetriever):
         retrieval_results = RetrievalResults()
 
         for query in queries:
-            print(f"\nSearching for: {query.query}...\n")
+            # print(f"\nSearching for: {query.query}...\n")
             try:
                 # get results from search engine
                 search_results = get_search_results_sync(query.query, num_results=5, time_filter="all")
