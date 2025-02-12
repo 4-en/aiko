@@ -59,23 +59,28 @@ Notes
 - To enable certain hardware acceleration backends for llama-cpp, follow instruction from [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) and [llama-cpp](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md)
 
 
-## 🛠 Roadmap
-
-- Implement NanoVectorDB-based local retrieval 🛠
-- Web search integration 🛠
-- Persistent memory for users & characters 🛠
-- Discord bot integration 🛠
-- API for external applications 🛠
-
 ## Key Goals
 - **Realistic conversations** via web or chat applications
+- **API integration** for external services (e.g., OpenAI, Gemini)
+- **Local models** for independent operation
+- **Hybrid retrieval** for local and web-based information
+- **Custom knowledge bases** for user-specific data
+- **Function/Tool integration** for math, mood, etc.
 - **Distinct personality** per AI assistant
+  - **System Instruction Based** e.g. "You are a..."
+  - **Personality Embedding** 
 - **Persistent memory** for both:
   - **Users** (Aiko remembers past interactions)
   - **Characters** (Each AI has its own unique memory)
 - **Seamless switching** between AI personas and conversations
 - **Discord bot** integration
 - **Web version** (aiko.lol)
+- **Real Time Character Simulation** (RTCS) for AI characters
+  - **Mood** (happy, sad, angry, etc.)
+  - **Relationships** (with users and other characters)
+  - **Memory** (long-term and short-term)
+  - **Activities** (e.g., reading, watching, playing)
+ 
 
 ## Improvements to 1.0
 - use more complex model as a base
