@@ -250,7 +250,7 @@ class Config(ConfigClass):
     log_dir: str = "logs"
     
     cc_max_generated_tokens: str = "The maximum number of tokens to generate"
-    max_generated_tokens: int = 256
+    max_generated_tokens: int = 512
     cc_temperature: str = "The temperature for sampling, higher values make the model more creative"
     temperature: float = 1.3
     cc_top_k: str = "The number of tokens to sample from, lower values make the model more conservative"
@@ -260,8 +260,14 @@ class Config(ConfigClass):
     
     cc_max_generated_queries: str = "The maximum number of queries to generate for information retrieval"
     max_generated_queries: int = 3
-    cc_max_retrieved_info: str = "The last n messages of the conversation to use a context for query generation"
+    cc_max_retrieved_info: str = "The max amount of passsages to use when generating summaries"
+    max_retrieved_info: int = 6
+    cc_max_eval_input_messages: str = "The last n messages of the conversation to use a context for query generation"
     max_evaluation_input_messages: int = 10
+    cc_enable_pre_evaluation_retrieval: str = "Whether to enable pre-evaluation retrieval\nThis will retrieve information before the evaluation of the response based on the raw user input"
+    enable_pre_evaluation_retrieval: bool = True
+    cc_max_retrieval_depth: str = "The maximum depth of the retrieval tree"
+    max_retrieval_depth: int = 1
     
     
 def config_test():
