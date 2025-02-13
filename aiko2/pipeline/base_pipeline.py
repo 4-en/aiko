@@ -10,7 +10,7 @@ class BasePipeline(ABC):
     """
 
     @abstractmethod
-    def generate(self, conversation: Conversation) -> Message | None:
+    def generate(self, conversation: Conversation, *args, **kwargs) -> Message | None:
         """
         Generate a response based on the conversation.
 
@@ -18,6 +18,10 @@ class BasePipeline(ABC):
         ----------
         conversation : Conversation
             The conversation to generate a response from.
+        args
+            Additional arguments.
+        kwargs
+            Additional keyword arguments.
 
         Returns
         -------

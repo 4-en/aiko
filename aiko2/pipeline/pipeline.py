@@ -227,7 +227,7 @@ class Pipeline(BasePipeline):
         return Message(instruction, User("System", Role.SYSTEM))
         
 
-    def generate(self, conversation: Conversation) -> Message | None:
+    def generate(self, conversation: Conversation, *args, **kwargs) -> Message | None:
         """
         Generate a response based on the conversation.
 
@@ -235,6 +235,10 @@ class Pipeline(BasePipeline):
         ----------
         conversation : Conversation
             The conversation to generate a response from.
+        args
+            Additional arguments.
+        kwargs
+            Additional keyword arguments.
 
         Returns
         -------
