@@ -125,3 +125,18 @@ The pipeline is the core of the system. It handles the retrieval and generation 
 - Generate reply
 - Refine reply
 - Return reply
+
+### Retrieval Loop
+```
+1. Accept input message
+2. Pre-retrieval based on raw message (embedding+NER)
+3. Generate queries for retriever using pre-retrieval information
+4. Retrieve information (query embedding)
+4b. Expand Retrieval (retrieval embedding/NER, max depth, min relevance)
+5. Rerank and summarize retrieved information
+6. loop back to 3 if necessary/configured
+7. Final summary in thought like format
+8. Use summary to generate reply
+          
+```
+          
