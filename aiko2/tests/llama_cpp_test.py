@@ -10,9 +10,9 @@ import time
 # unsloth/DeepSeek-R1-Distill-Qwen-3B-GGUF, *Q4_K_M.gguf
 # bartowski/NousResearch_DeepHermes-3-Llama-3-8B-Preview-GGUF, *Q4_K_M.gguf
 
-def custom_deephermes3_converter(chat: list[dict]) -> str:
+def custom_llama3_converter(chat: list[dict]) -> str:
     """
-    Test custom chat converter for DeepHermes-3
+    Test custom chat converter for llama-3 based models
 
     <|begin_of_text|><|start_header_id|>system<|end_header_id|>
     {system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>
@@ -85,7 +85,7 @@ def manual_inference():
             print("Injecting:", inject)
             messages.append(create_message("assistant", "<think>" + inject))
 
-        message_str = custom_deephermes3_converter(messages)
+        message_str = custom_llama3_converter(messages)
         start_time = time.time()
         response = llm(
             prompt=message_str,
