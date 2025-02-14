@@ -306,7 +306,7 @@ class BaseEvaluator(ComponentMixin):
         if output_message == None:
             return evaluation
         
-        output_string = output_message.content
+        output_string = output_message.message_text
         
         # try to unscuff the json
         if not output_string.startswith("{") or not output_string.startswith("["):
@@ -424,7 +424,7 @@ class BaseEvaluator(ComponentMixin):
         if summary_message == None:
             return None
 
-        return summary_message.content
+        return summary_message.message_text
 
     def _get_memory_instructions(self) -> str:
         """
@@ -510,7 +510,7 @@ class BaseEvaluator(ComponentMixin):
             if output_message == None:
                 continue
             
-            output_str = output_message.content
+            output_str = output_message.message_text
             
             new_memories = []
             

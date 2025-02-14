@@ -107,14 +107,14 @@ class GeminiGenerator(BaseGenerator):
                 role = GeminiRole.MODEL
             elif message.user.role == Role.SYSTEM:
                 # Gemini does not support system messages, instead the instruction is added when instantiating the model
-                found_instructions.append(message.content)
+                found_instructions.append(message.message_text)
                 continue
                 
             messages.append({
                 "role": role.value,
                 "parts": [
                     {
-                        "text": f"<{message.user.name}> {message.content}" if message.user.role == Role.USER or message.user.role == Role.ASSISTANT else message.content
+                        "text": f"<{message.user.name}> {message.message_text}" if message.user.role == Role.USER or message.user.role == Role.ASSISTANT else message.message_text
                     }
                 ]
             })

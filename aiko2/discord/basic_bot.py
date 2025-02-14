@@ -76,8 +76,8 @@ class BasicDiscordBot(discord.Client):
             response = await asyncio.get_event_loop().run_in_executor(self.executor, self.pipeline.generate, conversation)
             self._generating = False
 
-            if response and response.content and response.content.strip() != '':
-                content = response.content
+            if response and response.message_text and response.message_text.strip() != '':
+                content = response.message_text
                 content = await self.insert_emotes(content)
                 self.recent_conversations[channel.id] = time.time()
                 await self._send_message(channel, content)
@@ -227,7 +227,7 @@ class BasicDiscordBot(discord.Client):
                 return
             
             user = User(name=name, role=Role.USER, id=str(user_id))
-            aiko_message = Message(content=content, user=user)
+            aiko_message = Message(content, user=user)
             conversation.add_message(aiko_message)
             self.conversations[channel_id] = conversation
 

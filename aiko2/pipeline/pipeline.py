@@ -294,7 +294,7 @@ class Pipeline(BasePipeline):
             if len(retrieved_info) > 0:
                 # self._append_retrieval_results(conversation, retrieved_info)
                 user_message = conversation.messages[-1]
-                user_message_content = f"I remember {user_message.user.name} said:\n\"{user_message.content}\""
+                user_message_content = f"I remember {user_message.user.name} said:\n\"{user_message.message_text}\""
                 if len(evaluator_context) > 0:
                     user_message_content = f"{user_message_content}\n\n{evaluator_context[0]}"
                 summary = self.evaluator.summarize_retrieval(retrieved_info, user_message_content)
@@ -330,8 +330,8 @@ class Pipeline(BasePipeline):
 
         # remove quotation marks around the response if they are the first and last characters
         marks = ['"', "'"]
-        if response and response.content and response.content[0] in marks and response.content[-1] in marks:
-            response.content = response.content[1:-1]
+        if response and response.message_text and response.message_text[0] in marks and response.message_text[-1] in marks:
+            response.message_text = response.message_text[1:-1]
 
         
         # Refine response

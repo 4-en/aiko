@@ -272,7 +272,7 @@ class AikoRefiner(BaseRefiner):
             The refined response.
         """
         
-        content:str = response.content
+        content:str = response.message_text
         
     
 

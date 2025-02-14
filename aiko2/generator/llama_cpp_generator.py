@@ -108,7 +108,7 @@ class LlamaCppGenerator(BaseGenerator):
                 
             messages.append({
                 "role": role.value,
-                "content": f"<{message.user.name}> {message.content}" if message.user.role == Role.USER or message.user.role == Role.ASSISTANT else message.content
+                "content": f"<{message.user.name}> {message.message_text}" if message.user.role == Role.USER or message.user.role == Role.ASSISTANT else message.message_text
             })
         return messages
     
