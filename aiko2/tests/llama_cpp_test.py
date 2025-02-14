@@ -12,7 +12,7 @@ import time
 
 def custom_llama3_converter(chat: list[dict]) -> str:
     """
-    Test custom chat converter for llama-3 based models
+    custom chat converter for llama-3 based models
 
     <|begin_of_text|><|start_header_id|>system<|end_header_id|>
     {system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>
@@ -39,6 +39,31 @@ def custom_llama3_converter(chat: list[dict]) -> str:
     return "".join(parts)
         
 
+def custom_chatml_converter(chat: list[dict]) -> str:
+    """
+    custom chat converter for chatml based models
+
+    <|im_start|>{role}
+    {prompt}<|im_end|>
+    <|im_start|>{role}
+    {prompt}<|im_end|>
+    ...
+    """
+    parts = []
+    # parts.append("<|begin_of_text|>")
+    is_last_assistant = False
+    for i, message in enumerate(chat):
+        role = message["role"]
+        is_last_assistant = role == "assistant" and i == len(chat) - 1
+        parts.append(f"<|im_start|>{role}")
+        parts.append(message["content"])
+        if not is_last_assistant:
+            parts.append("<|im_end|>")
+
+    if not is_last_assistant:
+        parts.append("<|im_start|>assistant\n")
+
+    return "\n".join(parts)
 
 def create_message(role: str, content: str) -> dict:
     return {
