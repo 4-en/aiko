@@ -2,39 +2,108 @@ from typing import Iterator
 from llama_cpp import Llama
 import time
 
+# some llms for later
+# bartowski/Llama-3.2-3B-Instruct-GGUF, *Q6_K.gguf
+# unsloth/DeepSeek-R1-Distill-Qwen-7B-GGUF, *Q4_K_M.gguf
+# unsloth/DeepSeek-R1-Distill-Qwen-14B-GGUF, *Q4_K_M.gguf
+# unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF, *Q4_K_M.gguf
+# unsloth/DeepSeek-R1-Distill-Qwen-3B-GGUF, *Q4_K_M.gguf
+# bartowski/NousResearch_DeepHermes-3-Llama-3-8B-Preview-GGUF, *Q4_K_M.gguf
+
+def custom_deephermes3_converter(chat: list[dict]) -> str:
+    """
+    Test custom chat converter for DeepHermes-3
+
+    <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+    {system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>
+    {prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+    """
+    parts = []
+    # parts.append("<|begin_of_text|>")
+    is_last_assistant = False
+    for i, message in enumerate(chat):
+        role = message["role"]
+        is_last_assistant = role == "assistant" and i == len(chat) - 1
+
+        content = message["content"]
+        parts.append(f"<|start_header_id|>{role}<|end_header_id|>")
+        parts.append(content)
+
+        # inject assistant response and leave open ended if last message is from assistant
+        if not is_last_assistant:
+            parts.append("<|eot_id|>")
+    
+    if not is_last_assistant:
+        parts.append("<|start_header_id|>assistant<|end_header_id|>")
+
+    return "".join(parts)
+        
+
+
+def create_message(role: str, content: str) -> dict:
+    return {
+        "role": role,
+        "content": content
+    }
+
 def manual_inference():
     llm = Llama.from_pretrained(
-        "bartowski/Llama-3.2-3B-Instruct-GGUF",
-        filename="*Q6_K.gguf",
-        verbose=True,
+        "bartowski/NousResearch_DeepHermes-3-Llama-3-8B-Preview-GGUF",
+        filename="*Q4_K_M.gguf",
+        verbose=False,
         n_ctx=10000,
         n_gpu_layers=-1,
         flash_attn=True
     )
 
-    print(llm.chat_format)
+    # print(llm.chat_format)
 
     print("Model loaded. Enter prompts to generate completions.")
     print("Enter 'exit' to quit.")
+
+    messages = []
+
+    instruction = input("Instruction: ")
+    instruction = instruction or "You are a deep thinking AI, you may use extremely long chains of thought to deeply consider the problem and deliberate with yourself via systematic reasoning processes to help come to a correct solution prior to answering. You should enclose your thoughts and internal monologue inside <think> </think> tags, and then provide your solution or response to the problem."
+
+    messages.append(create_message("system", instruction))
 
     while True:
         prompt = input("Prompt: ")
         if prompt == "exit":
             break
+
+        inject = ""
+        if "::" in prompt:
+            parts = prompt.split("::")
+            prompt = parts[0]
+            inject = parts[1]
+
+        messages.append(create_message("user", prompt))
+
+        if inject:
+            print("Injecting:", inject)
+            messages.append(create_message("assistant", "<think>" + inject))
+
+        message_str = custom_deephermes3_converter(messages)
         start_time = time.time()
         response = llm(
-            prompt,
+            prompt=message_str,
             max_tokens=4000,
-            temperature=1.3
+            temperature=1.2
         )
+
         end_time = time.time()
         completion_tokens = int(response["usage"]["completion_tokens"])
         tps = completion_tokens / (end_time - start_time)
         tps = round(tps, 2)
         print(f"TPS: {tps}, Time: {round(end_time - start_time, 2)}s")
         print()
-        print(response["choices"][0])
+        content = response["choices"][0]["text"]
+        print(format_output(content))
         print()
+
+        messages.append(create_message("assistant", inject+content))
 
 def format_output(output: str) -> str:
     # replace /n in the output with actual newlines
