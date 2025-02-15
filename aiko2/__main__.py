@@ -27,9 +27,6 @@ class Stopwatch:
 
 
 def main():
-    #kb_test.main()
-
-    load_dotenv()
 
     print("Hello, world!")
     print("Testing pipeline")

@@ -5,7 +5,6 @@ from aiko2.evaluator import Gemini15Flash8BEvaluator
 from aiko2.config import Config
 from aiko2.retriever import WebRetriever
 
-from dotenv import load_dotenv
 
 
 class CLI:
@@ -14,9 +13,6 @@ class CLI:
     """
     def run():
         # logging.basicConfig(level=logging.DEBUG)
-
-        # Load environment variables
-        load_dotenv()
 
         pipeline = Pipeline(Gemini15Flash8B(), evaluator=Gemini15Flash8BEvaluator(), retriever=WebRetriever())
 
