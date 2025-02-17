@@ -10,7 +10,7 @@ With support for custom knowledge bases, embedding based text retrieval, web sea
 
 - **Personalized AI Assistants** – Custom memory for each user and AI character.
 - **Efficient RAG Pipelines** – Optimized for resource-constrained hardware.
-- **Hybrid Retrieval** – Use NanoVectorDB for local retrieval and web search for external data.
+- **Hybrid Retrieval** – Use NanoVectorDB for local, vector-based retrieval and web search for external data.
 - **API Integration** – Seamlessly connect with OpenAI, Gemini, and other services.
 - **Modular Design** – Easily extend with new retrieval and generation methods.
 - **Multi-Platform Support** – Designed for Raspberry Pi 5 but runs on any Linux/Windows system.
@@ -64,6 +64,11 @@ Notes
 - **API integration** for external services (e.g., OpenAI, Gemini)
 - **Local models** for independent operation
 - **Hybrid retrieval** for local and web-based information
+  - **Embedding-based retrieval** for local data in vector databases
+  - **Web search** for external data
+  - **NER** for named entity recognition in graph databases
+    - NER for initial message
+    - NER for retrieved information to expand retrieval
 - **Custom knowledge bases** for user-specific data
 - **Function/Tool integration** for math, mood, etc.
 - **Distinct personality** per AI assistant
