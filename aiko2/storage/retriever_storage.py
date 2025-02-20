@@ -4,6 +4,240 @@ from abc import ABC, abstractmethod
 import uuid
 import os
 
+    
+@dataclass
+class TagEntry:
+    """
+    A tag entry in the graph database.
+    """
+    name: str
+    occurences: int = 1
+    
+@dataclass
+class GraphDBQueryResult:
+    """
+    A result from a graph database query.
+    """
+    
+    doc_id: str
+    tags: list[TagEntry]
+    score: float
+
+
+
+class GraphDB(ABC):
+    """
+    A graph database for storing document ids and tags in their relationship.
+    """
+    
+    def __init__(self, path: str):
+        self.path = path
+        if path and not os.path.exists(path):
+            os.makedirs(path)
+         
+    @abstractmethod   
+    def get_total_tags(self) -> int:
+        """
+        Get the total number of tags in the graph database.
+        
+        Returns
+        -------
+        int
+            The total number of tags.
+        """
+        pass
+        
+    @abstractmethod
+    def get_unique_tags(self) -> int:
+        """
+        Get the number of unique tags in the graph database.
+        
+        Returns
+        -------
+        int
+            The number of unique tags.
+        """
+        pass
+    
+    def calculate_score(self, tags: list[TagEntry], query_tags: list[str]) -> float:
+        """
+        Calculate the score of a document based on its tags and the query tags.
+        
+        Parameters
+        ----------
+        tags : list[TagEntry]
+            The tags of the document.
+        query_tags : list[str]
+            The query tags.
+        
+        Returns
+        -------
+        float
+            The score of the document.
+        """
+        # calculate a score between 0 and 1 based on the tags of the document and the query tags
+        query_entries = self.get_tag_entries(query_tags)
+        query_entries = list(filter(lambda x: x is not None, query_entries))
+        
+        # give more importance to query tags that are rarer in the db
+        occurances = np.array([entry.occurences for entry in query_entries])
+        total_occurences = np.sum(occurances)
+        
+        QUERY_FREQ_IMPORTANCE_SCALING = 1.0
+        
+        # if 0, then all tags are equally important, if higher, then rarer tags are more important, if lower, then more common tags are more important
+        
+        query_freq_importance = np.exp(-QUERY_FREQ_IMPORTANCE_SCALING * occurances / total_occurences)
+        
+        # normalize the query freq importance
+        query_freq_importance = query_freq_importance / np.max(query_freq_importance)
+        
+        
+        
+        # if a tag occurs multiple times in a document, it should be more important
+        # as that probably means its not only mentioned once but rather an important part of the document
+        
+        # TODO: consider some sort of outlier removal here
+        # for example, if some useless tag is mentioned 100 times, it drags the score of relevant tags down
+        # maybe also include document length in the calculation (although it indirectly is included with total_occurences, which should be higher for longer documents)
+        
+        # TODO: this score could be pre-calculated and stored in the db, so it doesn't have to be calculated every time
+        # However, then we couldn't change the importance of tags without recalculating the scores
+        DOC_FREQ_IMPORTANCE_SCALING = 1.0
+        
+        doc_occurances = np.array([entry.occurences for entry in tags])
+        total_occurences = np.sum(doc_occurances)
+        
+        # basically opposite of query freq importance, since now multiple occurances are better
+        doc_freq_importance = np.exp(DOC_FREQ_IMPORTANCE_SCALING * doc_occurances / total_occurences)
+        doc_freq_importance = doc_freq_importance / np.max(doc_freq_importance)
+        
+        # calculate the score
+        score = 0.0
+        for query_entry in query_entries:
+            for tag_entry in tags:
+                if query_entry.name == tag_entry.name:
+                    # TODO: consider some sort of weighting here, eg the importance of the query tag is more important than the focus of the document (or other way around)
+                    score += query_freq_importance[query_entries.index(query_entry)] * doc_freq_importance[tags.index(tag_entry)]
+                    break
+        
+        score = score / len(query_entries)
+        
+        # TODO: consider additional influences on score, such as:
+        # - document date / recency
+        # - last access or access frequency (think memory in brain where more accessed memories are more important/better remembered)
+        #   something to consider: are less used memories forgotten because it improves the overall memory or are they forgotten because of capacity limitations?
+        #                          if the latter, we wouldn't have to worry about it (probably), but if the former, we should consider it
+        #   possible approach:
+        #   - store total accesses in db
+        #   - store document access times in db
+        #   - store n_accesses when document was added (so that we can calculate frequency without favoring older documents)
+        #   - other option: some kind of decay system, so that the most recent accesses are more important than older ones
+        #   - if below a threshold, the document is forgotten (or at least not considered in the query)
+        # - document type / source (eg scientific paper vs blog post)
+        #   a scientific paper might be more important than a blog post, but a blog post might be more important than a random forum post
+        #   it could stand for the quality or reliability of the source (but depends on the query, eg for a personal question, a forum post might be more relevant)
+        # (most of these things should probably better be handled independently of GraphDB)
+        
+        return score
+        
+
+    @abstractmethod
+    def save(self):
+        """
+        Save the graph database to disk.
+        """
+        pass
+
+    @abstractmethod
+    def load(self):
+        """
+        Load the graph database from disk.
+        """
+        pass
+    
+    @abstractmethod
+    def insert(self, doc_id: str, tags: list[str]):
+        """
+        Insert a document id and its tags into the graph database.
+        
+        Parameters
+        ----------
+        doc_id : str
+            The document id.
+        tags : list[str]
+            The tags associated with the document id.
+        """
+        pass
+    
+    @abstractmethod
+    def delete(self, doc_id: str) -> bool:
+        """
+        Delete a document id from the graph database.
+        
+        Parameters
+        ----------
+        doc_id : str
+            The document id to delete.
+        
+        Returns
+        -------
+        bool
+            True if the document id was deleted, False otherwise.
+        """
+        pass
+    
+    @abstractmethod
+    def query(self, tags: list[str]) -> list[GraphDBQueryResult]:
+        """
+        Query the graph database for document ids that have the given tags.
+        
+        Parameters
+        ----------
+        tags : list[str]
+            The tags to query for.
+        
+        Returns
+        -------
+        list[GraphDBQueryResult]
+            A list of query results.
+        """
+        pass
+    
+    @abstractmethod
+    def get_tag_entries(self, tags: list[str]) -> list[TagEntry|None]:
+        """
+        Get the tag entries for the given tags.
+        
+        Parameters
+        ----------
+        tags : list[str]
+            The tags to get the tag entries for.
+        
+        Returns
+        -------
+        list[TagEntry]
+            The tag entries for the given tags.
+        """
+        pass
+    
+    @abstractmethod
+    def get_tags(self, doc_id: str) -> list[str]:
+        """
+        Get the tags associated with a document id.
+        
+        Parameters
+        ----------
+        doc_id : str
+            The document id.
+        
+        Returns
+        -------
+        list[str]
+            The tags associated with the document id.
+        """
+        pass
+
 @dataclass
 class VectorDBQueryResult:
     """
