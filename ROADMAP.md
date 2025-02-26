@@ -122,6 +122,7 @@
   - 2d/3d character
   - can be interacted with via voice or text
   - can be used for various tasks like reminders, notes, etc. using function calling
+- simple Dockerfile for easy deployment
 
 ## Documentation
 - [ ] Full Documentation
