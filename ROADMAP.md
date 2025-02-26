@@ -94,6 +94,7 @@
 - [ ] Mood and Relationship System
 
 ## Extras
+- [ ] Python Sandbox for code execution using Docker
 - [ ] Obsidian Integration
   - use Obsidian as a knowledge base for RAG
   - "talk" to your notes
