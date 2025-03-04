@@ -67,7 +67,7 @@ class Memory:
     This can include personal information about a person or general knowledge.
     """
     memory: str # The memory to store
-    person: str # The person the memory is about
+    entities: list[str] # The entities
     topic: str # The topic of the memory
     time_relevance: TimeRelevance = TimeRelevance.ALWAYS
     truthfulness: float = 1.0 # The truthfulness of the memory, 1.0 is completely true, 0.0 is completely false

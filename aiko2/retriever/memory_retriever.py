@@ -18,7 +18,7 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
     A retriever with a dynamic memory that can be updated using results from the evaluator.
     """
     
-    def __init__(self, storage_name:str="memory"):
+    def __init__(self, storage_name:str="memory", embedding_dim:int=384):
         """
         Initialize the memory retriever.
         
@@ -26,11 +26,14 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
         ----------
         storage_name : str, optional
             The name of the storage, by default "memory"
+        embedding_dim : int, optional
+            The dimension of the embeddings, by default 384
         """
 
         self.knowledge_base = None
         self.embedder = None
         self.storage_name = storage_name
+        self.embedding_dim = embedding_dim
     
 
     def save(self):
@@ -53,7 +56,7 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
         # base path
         base_path = self.get_root_dir()
         memory_path = os.path.join(base_path, self.storage_name)
-        self.knowledge_base = SimpleMultiKnowledgeBase(memory_path, 384)
+        self.knowledge_base = SimpleMultiKnowledgeBase(memory_path, self.embedding_dim)
         self.embedder = BaseRanker.get_ranker("cosine")._embedder
         if self.embedder is None:
             self.embedder = sentence_transformers.SentenceTransformer("sentence-transformers/multi-qa-MiniLM-L6-cos-v1")
@@ -91,7 +94,7 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
 
 
         # domain is the person if not provided otherwise
-        domain = MemoryRetriever._clean_domain(memory.person) if domain is None else MemoryRetriever._clean_domain(domain)
+        domain = MemoryRetriever._clean_domain(memory.entities) if domain is None else MemoryRetriever._clean_domain(domain)
         content = memory.memory
         vector = self.embedder.encode(content, convert_to_numpy=True)
 

@@ -126,7 +126,7 @@ class BasicDiscordBot(discord.Client):
                 await message.channel.send('Invalid memory format. Use !add_memory <person>:<memory>')
                 return
             person, memory = splits
-            mem = Memory(person=person, memory=memory, topic=None)
+            mem = Memory(entities=[person], memory=memory, topic=None)
             self.pipeline.memory_handler.add_memory(mem, person)
             await message.channel.send(f'Memory added for {person}.')
             return

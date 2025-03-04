@@ -9,6 +9,7 @@ from aiko2.utils import parse_timestamp
 from pydantic import BaseModel
 from enum import Enum
 
+# TODO: change person to list of people
 """Use this JSON schema:
         QueryType = 'PERSONAL' | 'NEWS' | 'RESEARCH' | 'OTHER'
         TimeRelevance = 'NOW' | 'WEEK' | 'MONTH' | 'YEAR' | 'ALWAYS'
@@ -160,7 +161,7 @@ class BaseEvaluator(ComponentMixin):
             if memory_str == "" or person == "" or topic == "":
                 continue
             
-            memories_response.append(Memory(memory_str, person, topic, time_relevance, truthfulness, memory_age))
+            memories_response.append(Memory(memory_str, [person], topic, time_relevance, truthfulness, memory_age))
             
             
         evaluation = Evaluation(
@@ -462,86 +463,91 @@ class BaseEvaluator(ComponentMixin):
             A new list of memories with similar memories merged.
             None if no memories were merged.
         """
+
+        # TODO: move to a system that keeps all memories and groups the ones that are similar / the same / contradicting
+        # then, create a summary memory for the group
+        # this way, we can keep all memories and still have a way to summarize them
+        # also, if we find 3 memories stating A and 1 stating not A, we can keep all
+        # of them and based on truthfulness and time relevance decide which one is most likely true
+        # optionally, we can also do additional research if we have contradicting memories, until a certain threshold is reached
         
-        # only try to merge memories if they are about the same person
-        names = {}
-        for memory in memories:
-            name = memory.person.lower()
-            if name not in names:
-                names[name] = [memory]
-            else:
-                names[name].append(memory)
+        if len(memories) < 2:
+            return None
           
-        removed_memories = []
-        new_memories = []
-        for name, memories in names.items():
-            if len(memories) < 2:
-                continue
+        id_to_memory = {}
+        for i, memory in enumerate(memories):
             
             # assign id to memories
-            id_to_memory = {}
-            for i, memory in enumerate(memories):
-                id_to_memory[i] = memory
+            id_to_memory[i] = memory
                 
-            # create the input message
-            request = {
-                "memories": [
-                    {
-                        "id": i,
-                        "memory": memory.memory
-                    }
-                    for i, memory in id_to_memory.items() if memory not in removed_memories
-                ]  
-            }
+        # create the input message
+        request = {
+            "memories": [
+                {
+                    "id": i,
+                    "memory": memory.memory
+                }
+                for i, memory in id_to_memory.items()
+            ]  
+        }
+        
+
+        request_str = json.dumps(request)
+        
+        input_messages = [
+            Message(self._get_memory_instructions(), User("System", Role.SYSTEM)),
+            Message(request_str, User("User", Role.USER))
+        ]
+        input_conversation = Conversation(input_messages)
+        
+        output_message = self.generator.generate(input_conversation)
+        
+        if output_message == None:
+            return None
+        
+        output_str = output_message.message_text
+        
+        new_memories = []
+        removed_memories = []
+        
+        try:
+            json_output = json.loads(output_str)
+            new_memories = json_output.get("new_memories", [])
+        except json.JSONDecodeError:
+            print("Error decoding JSON output from generator.")
+            print(output_str)
+            return None
+        except Exception as e:
+            print("Error processing output from generator.")
+            print(e)
+            return None
+        
+        for new_memory in new_memories:
+            source_ids = new_memory.get("source_ids", [])
+            memory_str = new_memory.get("memory", "")
             
-            if len(request["memories"]) < 2:
+            if len(source_ids) < 2:
                 continue
-            
-            request_str = json.dumps(request)
-            
-            input_messages = [
-                Message(self._get_memory_instructions(), User("System", Role.SYSTEM)),
-                Message(request_str, User("User", Role.USER))
-            ]
-            input_conversation = Conversation(input_messages)
-            
-            output_message = self.generator.generate(input_conversation)
-            
-            if output_message == None:
+
+            source_mems = [id_to_memory[source_id] for source_id in source_ids]
+            source_mems = [memory for memory in source_mems if memory not in removed_memories]
+            if len(source_mems) < 2:
                 continue
+
+            entities = set()
+            for source_id in source_ids:
+                entities.update(id_to_memory[source_id].entities)
+            entities = list(entities)
+
+            topic = id_to_memory[source_ids[0]].topic
+            time_relevance = max([id_to_memory[source_id].time_relevance for source_id in source_ids])
+            truthfulness = sum([id_to_memory[source_id].truthfulness for source_id in source_ids]) / len(source_ids)
             
-            output_str = output_message.message_text
+            merged_memory = Memory(memory_str, entities, topic, time_relevance, truthfulness)
+            new_memories.append(merged_memory)
             
-            new_memories = []
-            
-            try:
-                json_output = json.loads(output_str)
-                new_memories = json_output.get("new_memories", [])
-            except json.JSONDecodeError:
-                print("Error decoding JSON output from generator.")
-                print(output_str)
-                continue
-            except Exception as e:
-                print("Error processing output from generator.")
-                print(e)
-                continue
-            
-            for new_memory in new_memories:
-                source_ids = new_memory.get("source_ids", [])
-                memory_str = new_memory.get("memory", "")
-                
-                if len(source_ids) < 2:
-                    continue
-                person = id_to_memory[source_ids[0]].person
-                topic = id_to_memory[source_ids[0]].topic
-                time_relevance = max([id_to_memory[source_id].time_relevance for source_id in source_ids])
-                truthfulness = sum([id_to_memory[source_id].truthfulness for source_id in source_ids]) / len(source_ids)
-                
-                merged_memory = Memory(memory_str, person, topic, time_relevance, truthfulness)
-                new_memories.append(merged_memory)
-                
-                for source_id in source_ids:
-                    removed_memories.append(id_to_memory[source_id])
+            for source_id in source_ids:
+                removed_memories.append(id_to_memory[source_id])
             
         
         if len(new_memories) == 0:
