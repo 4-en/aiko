@@ -1,5 +1,5 @@
 from .base_evaluator import BaseEvaluator
-from aiko2.generator import Gemini15Flash, Gemini15Flash8B, BaseGenerator
+from aiko.generator import Gemini15Flash, Gemini15Flash8B, BaseGenerator
 
 class GeminiEvaluator(BaseEvaluator):
     """

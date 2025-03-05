@@ -2,13 +2,13 @@ from dotenv import load_dotenv
 import os
 import discord
 from concurrent.futures import ThreadPoolExecutor
-from aiko2.core import Conversation, Message, User, Role, Memory, QueryType
-from aiko2.pipeline import Pipeline
-from aiko2.generator import OpenAIGenerator, Gemini15Flash8B, GPT4OMiniGenerator, DeepSeekR1DistillQwen7BGenerator, DeepSeekR1DistillQwen1_5BGenerator
-from aiko2.retriever import WebRetriever, MemoryRetriever, RetrievalRouter, query_type_routing_function, negated_routing_function
-from aiko2.evaluator import Gemini15Flash8BEvaluator, BaseEvaluator
-from aiko2.refiner import AikoRefiner
-from aiko2.utils import split_text
+from aiko.core import Conversation, Message, User, Role, Memory, QueryType
+from aiko.pipeline import Pipeline
+from aiko.generator import OpenAIGenerator, Gemini15Flash8B, GPT4OMiniGenerator, DeepSeekR1DistillQwen7BGenerator, DeepSeekR1DistillQwen1_5BGenerator
+from aiko.retriever import WebRetriever, MemoryRetriever, RetrievalRouter, query_type_routing_function, negated_routing_function
+from aiko.evaluator import Gemini15Flash8BEvaluator, BaseEvaluator
+from aiko.refiner import AikoRefiner
+from aiko.utils import split_text
 import traceback
 import asyncio
 import re
@@ -16,7 +16,7 @@ import time
 
 class BasicDiscordBot(discord.Client):
     """
-    A basic Discord bot that uses the Aiko2 pipeline to generate responses.
+    A basic Discord bot that uses the Aiko pipeline to generate responses.
     This is mainly for testing and demonstration purposes.
     """
     

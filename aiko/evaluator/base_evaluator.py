@@ -1,11 +1,11 @@
-from aiko2.core import Conversation, Message, User, Role, Memory, TimeRelevance, RetrieverType
+from aiko.core import Conversation, Message, User, Role, Memory, TimeRelevance, RetrieverType
 from dataclasses import dataclass, field
 import typing_extensions as typing
-from aiko2.generator.base_generator import BaseGenerator
-from aiko2.core import Query, QueryType, RetrievalResults
+from aiko.generator.base_generator import BaseGenerator
+from aiko.core import Query, QueryType, RetrievalResults
 import json
-from aiko2.pipeline.pipeline_components import ComponentMixin
-from aiko2.utils import parse_timestamp
+from aiko.pipeline.pipeline_components import ComponentMixin
+from aiko.utils import parse_timestamp
 from pydantic import BaseModel
 from enum import Enum
 

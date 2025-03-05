@@ -3,9 +3,9 @@ import sentence_transformers
 import numpy as np
 import rank_bm25
 from uuid import uuid4
-from aiko2.utils import split_text, chunk_text
+from aiko.utils import split_text, chunk_text
 from enum import Enum
-from aiko2.core import TimeRelevance
+from aiko.core import TimeRelevance
 
 class RetrieverType(Enum):
 
@@ -220,7 +220,7 @@ class RetrievalResults:
     
     def __init__(self):
         if RetrievalResults.ranker is None:
-            from aiko2.retriever import BaseRanker
+            from aiko.retriever import BaseRanker
             RetrievalResults.ranker = BaseRanker
             
         self.results: dict[str, list[QueryResult]] = {}

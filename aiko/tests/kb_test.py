@@ -1,4 +1,4 @@
-from aiko2.storage import SimpleKnowledgeBase
+from aiko.storage import SimpleKnowledgeBase
 import numpy as np
 
 def main():

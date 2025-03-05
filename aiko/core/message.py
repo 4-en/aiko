@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from .user import User
 from time import time
 from uuid import uuid4
-from aiko2.utils.estimate_tokens import estimate_tokens
+from aiko.utils.estimate_tokens import estimate_tokens
 from enum import Enum
 from abc import ABC, abstractmethod
 

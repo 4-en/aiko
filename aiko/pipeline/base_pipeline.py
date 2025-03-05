@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from aiko2.core import Conversation, Message, User
+from aiko.core import Conversation, Message, User
 
 class BasePipeline(ABC):
     """

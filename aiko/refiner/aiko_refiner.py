@@ -1,5 +1,5 @@
 from .base_refiner import BaseRefiner
-from aiko2.core import Conversation, Message
+from aiko.core import Conversation, Message
 import re
 import random
 

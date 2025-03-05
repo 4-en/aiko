@@ -1,6 +1,6 @@
 from .openai_generator import OpenAIGenerator
 import openai
-from aiko2.core import User, Role
+from aiko.core import User, Role
 from enum import Enum
 
 class DeepSeekModel(Enum):

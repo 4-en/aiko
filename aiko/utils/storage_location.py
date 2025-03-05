@@ -1,7 +1,7 @@
 import os
 import sys
 
-def get_storage_location(app_name: str = "aiko2", create: bool = True) -> str:
+def get_storage_location(app_name: str = "aiko", create: bool = True) -> str:
     """Get storage location for configs, logs, and other files.
     Depending on the platform, the location may vary.
     
@@ -13,7 +13,7 @@ def get_storage_location(app_name: str = "aiko2", create: bool = True) -> str:
     Parameters
     ----------
     app_name : str, optional
-        The name of the application. The default is "aiko2".
+        The name of the application. The default is "aiko".
     create : bool, optional
         Whether to create the directory if it does not exist. The default is True.
     """

@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from aiko2.tests import kb_test
+from aiko.tests import kb_test
 
 import time
 
@@ -31,9 +31,9 @@ def main():
     print("Hello, world!")
     print("Testing pipeline")
     stopwatch = Stopwatch()
-    from aiko2.client import CLI
+    from aiko.client import CLI
     print(f"CLI loaded in {stopwatch}")
-    from aiko2.discord import BasicDiscordBot
+    from aiko.discord import BasicDiscordBot
     print(f"Discord loaded in {stopwatch}")
 
     # CLI.run()

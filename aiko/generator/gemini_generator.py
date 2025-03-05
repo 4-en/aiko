@@ -1,5 +1,5 @@
 from .base_generator import BaseGenerator
-from aiko2.core import Conversation, Message, User, Role
+from aiko.core import Conversation, Message, User, Role
 import google.generativeai as genai
 from enum import Enum
 from pydantic import BaseModel

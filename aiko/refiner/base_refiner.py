@@ -1,4 +1,4 @@
-from aiko2.core import Conversation, Message
+from aiko.core import Conversation, Message
 from abc import ABC, abstractmethod
 
 class BaseRefiner(ABC):

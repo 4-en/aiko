@@ -1,7 +1,7 @@
 from .base_retriever import BaseRetriever
-from aiko2.storage import KnowledgebaseQueryResult
-from aiko2.core import Conversation, Message, RetrievalResults, Query, QueryResult
-import aiko2.pipeline.pipeline_components as pipeline_components
+from aiko.storage import KnowledgebaseQueryResult
+from aiko.core import Conversation, Message, RetrievalResults, Query, QueryResult
+import aiko.pipeline.pipeline_components as pipeline_components
 from .ranking import BaseRanker
 import sentence_transformers
 

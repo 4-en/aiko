@@ -1,6 +1,6 @@
 import openai.resources
 from .base_generator import BaseGenerator
-from aiko2.core import Conversation, Message, User, Role
+from aiko.core import Conversation, Message, User, Role
 import openai
 from enum import Enum
 from dotenv import load_dotenv
