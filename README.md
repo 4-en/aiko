@@ -1,4 +1,4 @@
-# Aiko
+# Aiko - A Framework for AI Agents with Memory and Personality (WIP)
 
 ## Overview
 
