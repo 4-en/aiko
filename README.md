@@ -58,6 +58,39 @@ Notes
 - You may need to install [PyTorch](https://pytorch.org/get-started/locally/) manually before installing requirements.txt.
 - To enable certain hardware acceleration backends for llama-cpp, follow instruction from [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) and [llama-cpp](https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md)
 
+## Examples
+### Basic Memory Pipeline
+```python
+from aiko.pipeline import MemoryPipeline
+from aiko.core import Conversation, Message, User, Role
+from aiko.utils import get_storage_location
+
+# uses Gemini by default. Provide your API key to the .env file in the root directory,
+# or set the environment variable GEMINI_API_KEY to your API key.
+pipeline = MemoryPipeline(root_dir=get_storage_location("example_memory_pipeline"))
+
+USER_NAME = "Alice"
+user = User(USER_NAME, Role.USER)
+conversation = Conversation()
+
+print("Enter 'exit' to save and exit the program.")
+while True:
+    user_input = input(f"{USER_NAME}: ")
+    if user_input.lower() == 'exit':
+        pipeline.save()
+        break
+
+    message = Message(user_input, user)
+    conversation.add_message(message)
+
+    response = pipeline.generate(conversation)
+    if response:
+        print(response)
+        conversation.add_message(response)
+    else:
+        print("(no response)")
+```
+
 
 ## Key Goals
 - **Realistic conversations** via web or chat applications
@@ -109,8 +142,27 @@ Notes
 - complex interactions between characters / characters acting without being prompted first (simulation/game)
 - character creation tool
 - game with npc's that can be interacted with
+- when query returns no result for personal memory, have a module that can create a memory based on the query, personality and context of other memories
+- keep track of concepts/memories in inner monologue and exclude them from retrieval
 
 ## Components
+
+### Convesation
+A conversation is a collection of messages between one or multiple users and an AI character.
+Besides the messages with timestamps, it can also contain the inner monologue of the AI character,
+which are basically thoughts (reasoning) before the actual reply is generated.
+The general structure could look like this:
+- User 1: "Hello!"
+- AI: <think>Oh, a greeting. I should reply in kind.</think> "Hello!"
+- User 1: "How are you?"
+- AI: <think>They are asking about my well-being. I should reply with a positive statement.</think> "I'm doing great, thank you for asking!"
+
+The inner monologue can also be generated or continued by the LLM, if the model supports it, but is generally the result of
+the retrieval and evaluation of the message.
+
+### Memory
+A memory is a piece of information that the AI character has stored. It can be a fact, a concept, a relationship, or any other piece of information.
+Besides the actual information as text, it can also contain metadata like the source of the information, the relevance, the timestamp, etc.
 
 ### Pipeline
 The pipeline is the core of the system. It handles the retrieval and generation of messages. It is responsible for the following:
