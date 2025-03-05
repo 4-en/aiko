@@ -1,8 +1,8 @@
-# Aiko 2.0 - Adaptive Intelligent Knowledge Orchestrator ✨
+# Aiko
 
 ## Overview
 
-Aiko is a lightweight, modular Retrieval-Augmented Generation (RAG) framework designed to create personalized AI chat assistants. It is optimized to run efficiently on low-end hardware, such as the Raspberry Pi 5, while leveraging external APIs (e.g., OpenAI, Gemini) or small local models.
+Aiko is a modular Retrieval-Augmented Generation (RAG) framework designed to create personalized AI chat assistants. At its core, it supports the creation of AI agents with dynamic memories, which can be powered using LLMs of any kind.
 
 With support for custom knowledge bases, embedding based text retrieval, web search, and user-specific memory, Aiko provides a robust yet accessible AI assistant experience. Future plans include API and Discord integrations.
 
