@@ -174,6 +174,26 @@ class Message:
 
         if self.id is None:
             self.id = str(uuid4())
+            
+    def get_formatted(self) -> str:
+        """
+        Return the formatted message.
+
+        Returns
+        -------
+        str
+            The formatted message.
+        """
+        # TODO: implement this function as a general way to format messages.
+        # It should work for openai style chat completions.
+        # It should contain the following:
+        # [time] <user>: <message>
+        # [time] <assistant>: <response>
+        #
+        # Time should be formatted as a human-readable (so llm readable) time, like "DD/MM/YYYY HH:MM:SS"
+        # User and assistant should be formatted as their names.
+        
+        return f"<{self.user.name}> {self.message_text}"
 
     @property
     def message_text(self) -> str:

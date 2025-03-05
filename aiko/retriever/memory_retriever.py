@@ -100,6 +100,7 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
 
         # TODO: check for similar memories and either combine them or skip if same info
 
+        # TODO: store the actual memory with metadata
         self.knowledge_base.insert(domain, content, vector)
 
     def retrieve(self, conversation:Conversation, queries:list[Query], domain:str=None) -> RetrievalResults:

@@ -87,6 +87,7 @@ class Query:
  
 @dataclass
 class QueryResult:
+    # TODO: include actual memory object
     """
     A class to hold a query result.
     
