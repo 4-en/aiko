@@ -8,7 +8,7 @@ deps = [
 ]
 
 setup(
-    name="Aiko2",
+    name="Aiko",
     version="0.2.0",
     packages=find_packages("."),
     package_dir={"": "."},
