@@ -89,12 +89,12 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
             The memory to add
         domain : str, optional
             The domain of the memory, by default None
-            If None, the domain is the person of the memory
+            If None, a default domain is used
         """
 
 
-        # domain is the person if not provided otherwise
-        domain = MemoryRetriever._clean_domain(memory.entities) if domain is None else MemoryRetriever._clean_domain(domain)
+        domain = domain or "default"
+        domain = MemoryRetriever._clean_domain(domain)
         content = memory.memory
         vector = self.embedder.encode(content, convert_to_numpy=True)
 
