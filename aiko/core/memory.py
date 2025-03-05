@@ -3,10 +3,13 @@ from dataclasses import dataclass, field
 from enum import Enum
 import numpy as np
 
+_UNKNOWN_MULTIPLIER = 0.9
+
 class TimeRelevance(Enum):
     """
     An enum to represent the relevance of a memory or query in time.
     """
+    UNKNOWN = 0
     NOW = 1
     WEEK = 2
     MONTH = 3
@@ -19,7 +22,9 @@ class TimeRelevance(Enum):
         Get the TimeRelevance enum from a string.
         """
         time_relevance = time_relevance.upper()
-        if time_relevance == "NOW":
+        if time_relevance == "UNKNOWN":
+            return TimeRelevance.UNKNOWN
+        elif time_relevance == "NOW":
             return TimeRelevance.NOW
         elif time_relevance == "WEEK":
             return TimeRelevance.WEEK
@@ -30,7 +35,7 @@ class TimeRelevance(Enum):
         elif time_relevance == "ALWAYS":
             return TimeRelevance.ALWAYS
         else:
-            return TimeRelevance.ALWAYS
+            return TimeRelevance.UNKNOWN
         
     
         
@@ -41,7 +46,11 @@ class TimeRelevance(Enum):
         half_time = 1000
         # Half time is double the literal time relevance to include more
         # slightly older information if it's relevant enough.
-        if self == TimeRelevance.NOW:
+        if self == TimeRelevance.UNKNOWN:
+            # since we don't know the time relevance, we will use a default multiplier, instead of a decay function
+            # this is slighly lower than a "perfect" relevance, to give a slight advantage to memories with known relevance
+            return _UNKNOWN_MULTIPLIER * value
+        elif self == TimeRelevance.NOW:
             half_time = 2
         elif self == TimeRelevance.WEEK:
             half_time = 14
