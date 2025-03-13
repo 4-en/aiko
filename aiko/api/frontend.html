@@ -166,7 +166,9 @@
     </div>
 
     <script>
-        const ws = new WebSocket('wss://your-websocket-server'); // Change to your WebSocket server URL
+        const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const ws = new WebSocket(`${wsProtocol}://${location.host}/ws`);
+        
         let username = localStorage.getItem("chatName");
 
         function showNameDialog() {
