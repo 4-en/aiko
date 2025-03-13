@@ -101,7 +101,7 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
         # TODO: check for similar memories and either combine them or skip if same info
 
         # TODO: store the actual memory with metadata
-        self.knowledge_base.insert(domain, content, vector)
+        self.knowledge_base.insert(domain, memory.to_dict(), vector)
 
     def retrieve(self, conversation:Conversation, queries:list[Query], domain:str=None) -> RetrievalResults:
         '''
@@ -121,7 +121,7 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
         RetrievalResults
             The retrieval context containing the results of the retrieval operation.
         '''
-        return self.retrieve_in_domains(None, conversation, queries)
+        return self.retrieve_in_domains(domain, conversation, queries)
 
     def retrieve_in_domains(self, domains:list[str], conversation:Conversation, queries:list[Query]) -> RetrievalResults:
         """
@@ -157,14 +157,16 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
                     results.extend(self.knowledge_base.query(query_embedding, k=5, domain=domain))
 
             for result in results:
+                memory = Memory.from_dict(result.value, result.vector)
                 query_result = QueryResult(
-                    result=result.value,
+                    result=memory.memory,
                     query=query,
-                    source=result.domain + "-" + result.key if result.domain is not None else result.key,
+                    source=memory.source,
                     retriever_type=RetrieverType.MEMORY,
                     embedding=result.vector, 
                     score=result.score,
-                    scoring_method="cosine"
+                    scoring_method="cosine",
+                    memory=memory
                 )
                 retrieval_results.add_result(query_result)
 
