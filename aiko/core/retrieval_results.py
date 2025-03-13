@@ -5,7 +5,8 @@ import rank_bm25
 from uuid import uuid4
 from aiko.utils import split_text, chunk_text
 from enum import Enum
-from aiko.core import TimeRelevance
+from aiko.core import TimeRelevance, Memory
+from time import time
 
 class RetrieverType(Enum):
 
@@ -69,7 +70,8 @@ class Query:
     topic: str
     query_type: QueryType
     query_id: str | None = None
-    time_relevance: TimeRelevance = TimeRelevance.ALWAYS
+    time_relevance: TimeRelevance = TimeRelevance.UNKNOWN
+    target_time: float = field(default_factory=lambda: time())
     embedding: np.ndarray | None = None
     
     def __post_init__(self):
@@ -116,6 +118,9 @@ class QueryResult:
     parent_part_index : int | None = None
         The index of the parent part.
         Can be used to order the parts and combine them if needed.
+    memory : Memory | None = None
+        The memory object associated with the result.
+        Can be None if the result is not a memory, eg. a web result.
     """
     
     result: str
@@ -128,6 +133,7 @@ class QueryResult:
     retriever_type: RetrieverType | None = RetrieverType.OTHER
     parent: 'QueryResult' = None
     parent_part_index: int | None = None
+    memory: Memory = None
     
     def __eq__(self, value):
         if not isinstance(value, QueryResult):

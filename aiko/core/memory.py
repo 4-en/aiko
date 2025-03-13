@@ -138,10 +138,50 @@ class Memory:
     """
     memory: str # The memory to store
     entities: list[str] # The entities
-    topic: str # The topic of the memory
+    topic: str # The topic or short summary of the memory
     time_relevance: TimeRelevance = TimeRelevance.ALWAYS
     truthfulness: float = 1.0 # The estimated truthfulness of the memory, 1.0 is probably completely true, 0.0 is probably completely false
     memory_age: float = 0 # The age of the memory in seconds (what it is about, not when it was created)
     source: str = "unknown" # The source of the memory, e.g. a person or a website
+    embedding: np.ndarray = None # The embedding of the memory
     creation_time: float = field(default_factory=time.time)
+    
+    def to_dict(self) -> dict:
+        """
+        Convert the memory to a dictionary ready to be stored in a database.
+        
+        Returns
+        -------
+        dict
+            The dictionary representation of the memory, excluding the embedding.
+        """
+        return {
+            "memory": self.memory,
+            "entities": self.entities,
+            "topic": self.topic,
+            "time_relevance": self.time_relevance.name,
+            "truthfulness": self.truthfulness,
+            "memory_age": self.memory_age,
+            "source": self.source,
+            "creation_time": self.creation_time
+        }
+        
+    @staticmethod
+    def from_dict(memory_dict: dict, embedding: np.ndarray=None) -> 'Memory':
+        """
+        Create a memory from a dictionary.
+        """
+        return Memory(
+            memory=memory_dict["memory"],
+            entities=memory_dict["entities"],
+            topic=memory_dict["topic"],
+            time_relevance=TimeRelevance[memory_dict["time_relevance"]],
+            truthfulness=memory_dict["truthfulness"],
+            memory_age=memory_dict["memory_age"],
+            source=memory_dict["source"],
+            embedding=embedding,
+            creation_time=memory_dict["creation_time"]
+        )
+        
+
     
