@@ -129,6 +129,7 @@ class TimeRelevance(Enum):
         
 
 import time
+from aiko.utils.ner import NER
 
 @dataclass
 class Memory:
@@ -141,7 +142,7 @@ class Memory:
     topic: str # The topic or short summary of the memory
     time_relevance: TimeRelevance = TimeRelevance.ALWAYS
     truthfulness: float = 1.0 # The estimated truthfulness of the memory, 1.0 is probably completely true, 0.0 is probably completely false
-    memory_age: float = 0 # The age of the memory in seconds (what it is about, not when it was created)
+    memory_time_point: float = field(default_factory=time.time) # The time the memory is about (not the time the memory was created)
     source: str = "unknown" # The source of the memory, e.g. a person or a website
     embedding: np.ndarray = None # The embedding of the memory
     creation_time: float = field(default_factory=time.time)
@@ -150,6 +151,13 @@ class Memory:
     # - access frequency / count / last access time
     # - avg / recent relevance (if a memory is often relevant for queries, it could be more relevant)
     # - references to other memories that often appear together with this memory
+
+    def __post_init__(self):
+        # add entities from memory string using NER
+        entities = NER.get_entities(self.memory)
+        self.entities.extend(entities)
+        self.entities = [entity.lower() for entity in self.entities]
+        self.entities = list(set(self.entities))
     
     def to_dict(self) -> dict:
         """
@@ -166,7 +174,7 @@ class Memory:
             "topic": self.topic,
             "time_relevance": self.time_relevance.name,
             "truthfulness": self.truthfulness,
-            "memory_age": self.memory_age,
+            "memory_age": self.memory_time_point,
             "source": self.source,
             "creation_time": self.creation_time
         }
@@ -182,7 +190,7 @@ class Memory:
             topic=memory_dict["topic"],
             time_relevance=TimeRelevance[memory_dict["time_relevance"]],
             truthfulness=memory_dict["truthfulness"],
-            memory_age=memory_dict["memory_age"],
+            memory_time_point=memory_dict["memory_age"],
             source=memory_dict["source"],
             embedding=embedding,
             creation_time=memory_dict["creation_time"]

@@ -4,3 +4,4 @@ from .text_formatting import split_text, chunk_text
 from .text_embedding import embed_text, get_embedder
 from .file_utils import load_json, load_list, load_text, save_json, save_text, save_list
 from .date_parser import parse_timestamp
+from .ner import NER

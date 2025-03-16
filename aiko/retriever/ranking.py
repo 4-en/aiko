@@ -60,7 +60,7 @@ class BaseRanker(ABC):
         BaseRanker._ranker[method] = ranker
         
     @staticmethod
-    def get_ranker(method: str) -> "BaseRanker":
+    def get_ranker(method: str="cosine") -> "BaseRanker":
         """
         Get a ranker by metric.
         
@@ -75,7 +75,8 @@ class BaseRanker(ABC):
             The ranker.
         """
         if not method in BaseRanker._ranker:
-            raise ValueError(f"Ranker for metric {method} not found.")
+            available_rankers = ", ".join(BaseRanker._ranker.keys())
+            raise ValueError(f"Ranker for metric {method} not found. Available rankers: {available_rankers}")
         
         return BaseRanker._ranker[method]
     
