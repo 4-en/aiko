@@ -145,6 +145,11 @@ class Memory:
     source: str = "unknown" # The source of the memory, e.g. a person or a website
     embedding: np.ndarray = None # The embedding of the memory
     creation_time: float = field(default_factory=time.time)
+
+    # TODO: possible additional fields for future versions:
+    # - access frequency / count / last access time
+    # - avg / recent relevance (if a memory is often relevant for queries, it could be more relevant)
+    # - references to other memories that often appear together with this memory
     
     def to_dict(self) -> dict:
         """

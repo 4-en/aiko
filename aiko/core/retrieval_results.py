@@ -64,6 +64,8 @@ class Query:
         The relevance of the query in time.
     embedding : np.ndarray
         The embedding of the query.
+    entities : list[str]
+        The entities in the query.
     """
     
     query: str
@@ -73,6 +75,7 @@ class Query:
     time_relevance: TimeRelevance = TimeRelevance.UNKNOWN
     target_time: float = field(default_factory=lambda: time())
     embedding: np.ndarray | None = None
+    entities: list[str] = field(default_factory=list)
     
     def __post_init__(self):
         if self.query_id is None:
@@ -103,9 +106,6 @@ class QueryResult:
         The embedding of the result.
     score : float | None = None
         The score of the result compared to the query.
-    scoring_method : str | None = None
-        The method used to score the result.
-        cosine, bm25, etc.
     source : str | None = None
         The source of the result. For example, a URL.
     source_title : str | None = None
@@ -127,7 +127,6 @@ class QueryResult:
     query: Query
     embedding: np.ndarray | None = None
     score: float | None = None
-    scoring_method: str | None = None
     source: str | None = None
     source_title: str | None = None
     retriever_type: RetrieverType | None = RetrieverType.OTHER
@@ -175,9 +174,8 @@ class QueryResult:
     def add_embedding(self, embedding: np.ndarray):
         self.embedding = embedding
     
-    def add_score(self, score: float, method: str):
+    def add_score(self, score: float):
         self.score = score
-        self.scoring_method = method
         
     def split_result(self, max_length: int) -> list['QueryResult']:
         if len(self.result) <= max_length:
@@ -215,8 +213,6 @@ class RetrievalResults:
     ----------
     results : Dict[str, list[QueryResults]]
         The results of the retrieval operation, grouped by query.
-    scoring_method: str
-        The method used to score the results.
     summaries: List[str]
         The summaries of the results.
         This can include context from the evaluator or summaries
@@ -231,7 +227,6 @@ class RetrievalResults:
             RetrievalResults.ranker = BaseRanker
             
         self.results: dict[str, list[QueryResult]] = {}
-        self.scoring_method: str | None = None
         self._sources = {} # stores results by soure to avoid duplicates
         self.summaries: list[str] = []
         
@@ -267,11 +262,7 @@ class RetrievalResults:
         else:
             self.results[query_result.query.query_id].append(query_result)
             
-        if self.scoring_method == None and query_result.scoring_method != None and len(self) == 1:
-            self.scoring_method = query_result.scoring_method
-            
-        if query_result.scoring_method != self.scoring_method:
-            self.scoring_method = None
+
             
         
 
@@ -289,16 +280,14 @@ class RetrievalResults:
             n += len(self.results[query_id])
         return n
     
-    def rank_results(self, scoring_method: str = "cosine") -> None:
+    def rank_results(self) -> None:
         """
         Rank the results based on the scoring method and adjust their scores.
+
         """
         
-        if not RetrievalResults.ranker.has_ranker(scoring_method):
-            raise ValueError(f"Ranker not found: {scoring_method}")
-        
-        RetrievalResults.ranker.rank(self, scoring_method)
-        self.scoring_method = scoring_method
+        # TODO: use config
+        RetrievalResults.ranker.rank(self, "cosine")
         
     def is_ranked(self) -> bool:
         """
@@ -309,7 +298,12 @@ class RetrievalResults:
         bool
             True if the results are ranked, False otherwise.
         """
-        return self.scoring_method is not None
+        
+        for query_id in self.results:
+            for result in self.results[query_id]:
+                if result.score is None:
+                    return False
+        return True
     
 
     def purge(self, min_score: float=0.0, max_results: int=None, min_query_results: int=1):
@@ -328,7 +322,6 @@ class RetrievalResults:
         """
         top_results = self.top_k(max_results, min_score, min_query_results=min_query_results)
         self.results = {}
-        self.scoring_method = None
         self._sources = {}
         for result in top_results:
             self.add_result(result)
@@ -427,15 +420,6 @@ class RetrievalResults:
                 self.results[query_id] = other.results[query_id]
             else:
                 self.results[query_id].extend(other.results[query_id])
-
-        if other.scoring_method != self.scoring_method:
-            # If scoring methods are different, set to None to indicate mixed scoring methods
-            # To rank results, the results should be re-scored using a single
-            # scoring method
-            self.scoring_method = None
-            for query_id in self.results:
-                for result in self.results[query_id]:
-                    result.score = None
 
 
 

@@ -165,7 +165,6 @@ class MemoryRetriever(BaseRetriever, pipeline_components.ComponentMixin, pipelin
                     retriever_type=RetrieverType.MEMORY,
                     embedding=result.vector, 
                     score=result.score,
-                    scoring_method="cosine",
                     memory=memory
                 )
                 retrieval_results.add_result(query_result)

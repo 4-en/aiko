@@ -156,7 +156,6 @@ class BaseRanker(ABC):
                 if ranking.embedding is not None:
                     query_result.embedding = ranking.embedding
                     
-                query_result.scoring_method = method
                 ranked_query_results.append(query_result)
                 
         return ranked_query_results
