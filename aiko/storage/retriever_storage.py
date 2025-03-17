@@ -3,13 +3,15 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 import uuid
 import os
-
+from aiko.core import Memory
+import math
     
 @dataclass
 class TagEntry:
     """
     A tag entry in the graph database.
     """
+    id: str
     name: str
     occurences: int = 1
     
@@ -18,17 +20,114 @@ class GraphDBQueryResult:
     """
     A result from a graph database query.
     """
-    
-    doc_id: str
-    tags: list[TagEntry]
+    id: str
+    memory: Memory
     score: float
 
+    def positive_feedback(self, query: str):
+        # TODO: implement positive feedback
+        pass
+
+TIME_DECAY_WEIGHT = 0.5
+BOOST_FACTOR = 0.5
+
+@dataclass
+class MemoryNode:
+    """
+    A node in the memory graph, containing the memory and metadata.
+    """
+    memory: Memory
+    creation: int = 0
+    last_access: int = 0
+    total_access: int = 0
+    access_score: float = 0.5
+
+    def to_dict(self):
+        return {
+            "memory": self.memory.to_dict(),
+            "creation": self.creation,
+            "last_access": self.last_access,
+            "total_access": self.total_access,
+            "access_score": self.access_score
+        }
+    
+    @staticmethod
+    def from_dict(data):
+        memory = Memory.from_dict(data["memory"])
+        creation = data["creation"]
+        last_access = data["last_access"]
+        total_access = data["total_access"]
+        access_score = data["access_score"]
+        return MemoryNode(memory, creation, last_access, total_access, access_score)
+    
+    def get_access_score(self, current_time: int) -> float:
+        # TODO: fix this
+        # scoring system is not working as intended, fix later
+        global_time_ratio = self.last_access / (current_time+1)
+        creation_time_ratio = ( self.last_access - self.creation ) / (current_time - self.creation + 1)
+
+        weighted_time_ratio = 0.5 * global_time_ratio + 0.5 * creation_time_ratio
+
+        # factor in total access count
+        # if last access was very recent (ie wtr is close to 1), then the total access count should not have much influence
+        # total_influence = 1 - weighted_time_ratio ** 2
+        # total_influence = max(0.0, total_influence)
+
+        weighted_time_ratio = 1 - weighted_time_ratio
 
 
-class GraphDB(ABC):
+        return (1-TIME_DECAY_WEIGHT) * self.access_score + TIME_DECAY_WEIGHT * ((math.exp(-weighted_time_ratio))) * self.access_score
+        
+    
+    def update_access(self, current_time: int):
+        global_time_ratio = self.last_access / (current_time+1)
+        creation_time_ratio = ( self.last_access - self.creation ) / (current_time - self.creation + 1)
+
+        weighted_time_ratio = 0.5 * global_time_ratio + 0.5 * creation_time_ratio
+
+        self.access_score = (1-TIME_DECAY_WEIGHT) * self.access_score + TIME_DECAY_WEIGHT * ((math.exp(-weighted_time_ratio))) * self.access_score
+        
+        # boost the access score since it was accessed
+        self.access_score += (1 - self.access_score) * BOOST_FACTOR
+        
+        self.last_access = current_time
+        self.total_access += 1
+
+
+@dataclass
+class GraphDBNode:
     """
-    A graph database for storing document ids and tags in their relationship.
+    A node in the graph database.
     """
+    
+    label: str
+    properties: dict
+    node_id: str = None
+
+@dataclass
+class GraphDBRelationship:
+    """
+    A relationship in the graph database.
+    """
+    
+    start_id: str
+    rel_type: str
+    end_id: str
+    properties: dict
+    bidirectional: bool = False
+    rel_id: str = None
+
+
+class GraphMemory(ABC):
+    """
+    A graph database for storing objects and their relationships,
+    with a scoring system for ranking results based on tags, frequency, and other factors.
+    """
+
+    # TODO: IDEA:
+    # - add a way to provide feedback on the results of a query, so that good results can be promoted and bad results can be demoted
+    # - this could be done by also storing queries along with good/bad results
+    # - the feedback could be used to adjust the scoring system, so that good results are more likely to be returned in the future
     
     def __init__(self, path: str):
         self.path = path
@@ -156,7 +255,7 @@ class GraphDB(ABC):
         """
         pass
     
-    @abstractmethod
+
     def insert(self, doc_id: str, tags: list[str]):
         """
         Insert a document id and its tags into the graph database.
@@ -170,7 +269,6 @@ class GraphDB(ABC):
         """
         pass
     
-    @abstractmethod
     def delete(self, doc_id: str) -> bool:
         """
         Delete a document id from the graph database.
@@ -187,7 +285,6 @@ class GraphDB(ABC):
         """
         pass
     
-    @abstractmethod
     def query(self, tags: list[str]) -> list[GraphDBQueryResult]:
         """
         Query the graph database for document ids that have the given tags.
@@ -204,7 +301,6 @@ class GraphDB(ABC):
         """
         pass
     
-    @abstractmethod
     def get_tag_entries(self, tags: list[str]) -> list[TagEntry|None]:
         """
         Get the tag entries for the given tags.
@@ -221,7 +317,6 @@ class GraphDB(ABC):
         """
         pass
     
-    @abstractmethod
     def get_tags(self, doc_id: str) -> list[str]:
         """
         Get the tags associated with a document id.
@@ -235,6 +330,182 @@ class GraphDB(ABC):
         -------
         list[str]
             The tags associated with the document id.
+        """
+        pass
+
+    @abstractmethod
+    def create_node(self, label, properties=None, node_id=None) -> GraphDBNode:
+        """
+        Create a node in the graph database.
+
+        Parameters
+        ----------
+        label : str
+            The label of the node.
+        properties : dict, optional
+            The properties of the node, by default None
+        node_id : str, optional
+            The id of the node, by default None
+            If None, a random id will be generated.
+
+        Returns
+        -------
+        GraphDBNode
+            The created node.
+        """
+        pass
+
+    @abstractmethod
+    def create_relationship(self, start_id, rel_type, end_id, properties=None, bidirectional=False, rel_id=None) -> GraphDBRelationship:
+        """
+        Create a relationship in the graph database.
+
+        Parameters
+        ----------
+        start_id : str
+            The id of the start node.
+        rel_type : str
+            The type of the relationship.
+        end_id : str
+            The id of the end node.
+        properties : dict, optional
+            The properties of the relationship, by default None
+        bidirectional : bool, optional
+            Whether the relationship is bidirectional, by default False
+        rel_id : str, optional
+            The id of the relationship, by default None
+            If None, a random id will be generated.
+
+        Returns
+        -------
+        GraphDBRelationship
+            The created relationship.
+        """
+        pass
+
+    @abstractmethod
+    def match_nodes(self, label=None, **property_filter) -> list[GraphDBNode]:
+        """
+        Match nodes in the graph database.
+
+        Parameters
+        ----------
+        label : str, optional
+            The label of the nodes to match, by default None
+        property_filter : dict
+            The properties to filter the nodes by.
+            A dict with the property name as key and the property value as value.
+            Filters out nodes that don't have the property or have a different value.
+
+        Returns
+        -------
+        list[GraphDBNode]
+            A list of nodes that match the filter.
+        """
+        pass
+
+    @abstractmethod
+    def match_relationships(self, rel_type=None, property_filter=None) -> list[GraphDBRelationship]:
+        """
+        Match relationships in the graph database.
+
+        Parameters
+        ----------
+        rel_type : str, optional
+            The type of the relationships to match, by default None
+        property_filter : dict, optional
+            The properties to filter the relationships by, by default None
+            A dict with the property name as key and the property value as value.
+            Filters out relationships that don't have the property or have a different value.
+
+        Returns
+        -------
+        list[GraphDBRelationship]
+            A list of relationships that match the filter.
+        """
+        pass
+
+    @abstractmethod
+    def get_relationships_for_node(self, node_id, rel_type=None, direction='both') -> list[GraphDBRelationship]:
+        """
+        Get relationships for a node in the graph database.
+
+        Parameters
+        ----------
+        node_id : str
+            The id of the node.
+        rel_type : str, optional
+            The type of the relationships to get, by default None
+        direction : str, optional
+            The direction of the relationships to get, by default 'both'
+            Can be 'both', 'in', or 'out'.
+
+        Returns
+        -------
+        list[GraphDBRelationship]
+            A list of relationships for the node.
+        """
+        pass
+
+    @abstractmethod
+    def update_node(self, node_id, properties):
+        """
+        Update a node in the graph database.
+
+        Parameters
+        ----------
+        node_id : str
+            The id of the node.
+        properties : dict
+            The properties to update.
+        """
+        pass
+
+    @abstractmethod
+    def update_relationship(self, rel_id, properties):
+        """
+        Update a relationship in the graph database.
+
+        Parameters
+        ----------
+        rel_id : str
+            The id of the relationship.
+        properties : dict
+            The properties to update.
+        """
+        pass
+
+    @abstractmethod
+    def delete_node(self, node_id) -> GraphDBNode:
+        """
+        Delete a node from the graph database.
+
+        Parameters
+        ----------
+        node_id : str
+            The id of the node.
+
+        Returns
+        -------
+        GraphDBNode
+            The deleted node.
+        """
+        pass
+
+    @abstractmethod
+    def delete_relationship(self, rel_id) -> GraphDBRelationship:
+        """
+        Delete a relationship from the graph database.
+
+        Parameters
+        ----------
+        rel_id : str
+            The id of the relationship.
+
+        Returns
+        -------
+        GraphDBRelationship
+            The deleted relationship.
         """
         pass
 
