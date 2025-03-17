@@ -138,8 +138,8 @@ class Memory:
     This can include personal information about a person or general knowledge.
     """
     memory: str # The memory to store
-    entities: list[str] # The entities
-    topic: str # The topic or short summary of the memory
+    entities: list[str] = field(default_factory=list) # The entities in the memory
+    topic: str = None # The topic of the memory
     time_relevance: TimeRelevance = TimeRelevance.ALWAYS
     truthfulness: float = 1.0 # The estimated truthfulness of the memory, 1.0 is probably completely true, 0.0 is probably completely false
     memory_time_point: float = field(default_factory=time.time) # The time the memory is about (not the time the memory was created)
