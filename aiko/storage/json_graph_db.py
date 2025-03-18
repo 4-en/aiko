@@ -7,13 +7,32 @@
 import json
 
 
-class GraphDB:
+class BasicGraphDB:
     def __init__(self):
         self.nodes = {}  # node_id -> node dict
         self.relationships = {}  # relationship_id -> relationship dict
         self.adjacency = {}  # node_id -> list of relationship ids
         self.next_node_id = 1
         self.next_rel_id = 1
+
+    def to_dict(self):
+        return {
+            'nodes': self.nodes,
+            'relationships': self.relationships,
+            'adjacency': self.adjacency,
+            'next_node_id': self.next_node_id,
+            'next_rel_id': self.next_rel_id
+        }
+    
+    @staticmethod
+    def from_dict(data):
+        graph = BasicGraphDB()
+        graph.nodes = data['nodes']
+        graph.relationships = data['relationships']
+        graph.adjacency = data['adjacency']
+        graph.next_node_id = data['next_node_id']
+        graph.next_rel_id = data['next_rel_id']
+        return graph
 
     def create_node(self, label, properties=None):
         node = {
