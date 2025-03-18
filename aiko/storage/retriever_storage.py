@@ -132,6 +132,8 @@ class GraphDBRelationship:
     rel_id: str = None
 
 
+
+
 class GraphMemory(ABC):
     """
     A graph database for storing objects and their relationships,
@@ -147,8 +149,216 @@ class GraphMemory(ABC):
         self.path = path
         if path and not os.path.exists(path):
             os.makedirs(path)
-         
-    @abstractmethod   
+
+
+    @abstractmethod
+    def _save(self):
+        """
+        Save the graph database to disk.
+        """
+        pass
+
+    @abstractmethod
+    def _load(self):
+        """
+        Load the graph database from disk.
+        """
+        pass
+
+    @abstractmethod
+    def _create_node(self, label, properties=None, node_id=None) -> GraphDBNode | None:
+        """
+        Create a node in the graph database.
+
+        Parameters
+        ----------
+        label : str
+            The label of the node.
+        properties : dict, optional
+            The properties of the node, by default None
+        node_id : str, optional
+            The id of the node, by default None
+            If None, a random id will be generated.
+
+        Returns
+        -------
+        GraphDBNode | None
+            The created node.
+            If the node could not be created, return None.
+        """
+        pass
+
+    @abstractmethod
+    def _create_relationship(self, start_id, rel_type, end_id, properties=None, bidirectional=False, rel_id=None) -> GraphDBRelationship | None:
+        """
+        Create a relationship in the graph database.
+
+        Parameters
+        ----------
+        start_id : str
+            The id of the start node.
+        rel_type : str
+            The type of the relationship.
+        end_id : str
+            The id of the end node.
+        properties : dict, optional
+            The properties of the relationship, by default None
+        bidirectional : bool, optional
+            Whether the relationship is bidirectional, by default False
+        rel_id : str, optional
+            The id of the relationship, by default None
+            If None, a random id will be generated.
+
+        Returns
+        -------
+        GraphDBRelationship | None
+            The created relationship.
+            If the relationship could not be created, return None.
+        """
+        pass
+
+    @abstractmethod
+    def _match_nodes(self, label=None, **property_filter) -> list[GraphDBNode]:
+        """
+        Match nodes in the graph database.
+
+        Parameters
+        ----------
+        label : str, optional
+            The label of the nodes to match, by default None
+        property_filter : dict
+            The properties to filter the nodes by.
+            A dict with the property name as key and the property value as value.
+            Filters out nodes that don't have the property or have a different value.
+
+        Returns
+        -------
+        list[GraphDBNode]
+            A list of nodes that match the filter.
+        """
+        pass
+
+    @abstractmethod
+    def _match_relationships(self, rel_type=None, property_filter=None) -> list[GraphDBRelationship]:
+        """
+        Match relationships in the graph database.
+
+        Parameters
+        ----------
+        rel_type : str, optional
+            The type of the relationships to match, by default None
+        property_filter : dict, optional
+            The properties to filter the relationships by, by default None
+            A dict with the property name as key and the property value as value.
+            Filters out relationships that don't have the property or have a different value.
+
+        Returns
+        -------
+        list[GraphDBRelationship]
+            A list of relationships that match the filter.
+        """
+        pass
+
+    @abstractmethod
+    def _get_relationships_for_node(self, node_id, rel_type=None, direction='both') -> list[GraphDBRelationship]:
+        """
+        Get relationships for a node in the graph database.
+
+        Parameters
+        ----------
+        node_id : str
+            The id of the node.
+        rel_type : str, optional
+            The type of the relationships to get, by default None
+        direction : str, optional
+            The direction of the relationships to get, by default 'both'
+            Can be 'both', 'in', or 'out'.
+
+        Returns
+        -------
+        list[GraphDBRelationship]
+            A list of relationships for the node.
+        """
+        pass
+
+    @abstractmethod
+    def _update_node(self, node_id, properties) -> GraphDBNode | None:
+        """
+        Update a node in the graph database.
+
+        Parameters
+        ----------
+        node_id : str
+            The id of the node.
+        properties : dict
+            The properties to update.
+
+        Returns
+        -------
+        GraphDBNode | None
+            The updated node.
+            If the node could not be updated, return None
+
+        """
+        pass
+
+    @abstractmethod
+    def _update_relationship(self, rel_id, properties) -> GraphDBRelationship | None:
+        """
+        Update a relationship in the graph database.
+
+        Parameters
+        ----------
+        rel_id : str
+            The id of the relationship.
+        properties : dict
+            The properties to update.
+
+        Returns
+        -------
+        GraphDBRelationship | None
+            The updated relationship.
+            If the relationship could not be updated, return None
+        """
+        pass
+
+    @abstractmethod
+    def _delete_node(self, node_id) -> GraphDBNode | None:
+        """
+        Delete a node from the graph database.
+
+        Parameters
+        ----------
+        node_id : str
+            The id of the node.
+
+        Returns
+        -------
+        GraphDBNode | None
+            The deleted node.
+            If the node could not be deleted, return None
+        """
+        pass
+
+    @abstractmethod
+    def _delete_relationship(self, rel_id) -> GraphDBRelationship | None:
+        """
+        Delete a relationship from the graph database.
+
+        Parameters
+        ----------
+        rel_id : str
+            The id of the relationship.
+
+        Returns
+        -------
+        GraphDBRelationship | None
+            The deleted relationship.
+            If the relationship could not be deleted, return None
+        """
+        pass
+
+
     def get_total_tags(self) -> int:
         """
         Get the total number of tags in the graph database.
@@ -160,7 +370,7 @@ class GraphMemory(ABC):
         """
         pass
         
-    @abstractmethod
+
     def get_unique_tags(self) -> int:
         """
         Get the number of unique tags in the graph database.
@@ -172,7 +382,7 @@ class GraphMemory(ABC):
         """
         pass
     
-    def calculate_score(self, tags: list[TagNode], query_tags: list[str]) -> float:
+    def calculate_tag_score(self, tags: list[TagNode], query_tags: list[str]) -> float:
         """
         Calculate the score of a document based on its tags and the query tags.
         
@@ -255,14 +465,14 @@ class GraphMemory(ABC):
         return score
         
 
-    @abstractmethod
+
     def save(self):
         """
         Save the graph database to disk.
         """
         pass
 
-    @abstractmethod
+
     def load(self):
         """
         Load the graph database from disk.
@@ -270,32 +480,30 @@ class GraphMemory(ABC):
         pass
     
 
-    def insert(self, doc_id: str, tags: list[str]):
+    def insert(self, memory: Memory):
         """
-        Insert a document id and its tags into the graph database.
+        Insert a memory into the graph database.
         
         Parameters
         ----------
-        doc_id : str
-            The document id.
-        tags : list[str]
-            The tags associated with the document id.
+        memory : Memory
+            The memory to insert.
         """
         pass
     
-    def delete(self, doc_id: str) -> bool:
+    def delete(self, memory_id: str) -> bool:
         """
-        Delete a document id from the graph database.
+        Delete a memory from the graph database.
         
         Parameters
         ----------
-        doc_id : str
+        memory_id : str
             The document id to delete.
         
         Returns
         -------
         bool
-            True if the document id was deleted, False otherwise.
+            True if the memory id was deleted, False otherwise.
         """
         pass
     
@@ -328,198 +536,6 @@ class GraphMemory(ABC):
         -------
         list[TagEntry]
             The tag entries for the given tags.
-        """
-        pass
-    
-    def get_tags(self, doc_id: str) -> list[str]:
-        """
-        Get the tags associated with a document id.
-        
-        Parameters
-        ----------
-        doc_id : str
-            The document id.
-        
-        Returns
-        -------
-        list[str]
-            The tags associated with the document id.
-        """
-        pass
-
-    @abstractmethod
-    def create_node(self, label, properties=None, node_id=None) -> GraphDBNode:
-        """
-        Create a node in the graph database.
-
-        Parameters
-        ----------
-        label : str
-            The label of the node.
-        properties : dict, optional
-            The properties of the node, by default None
-        node_id : str, optional
-            The id of the node, by default None
-            If None, a random id will be generated.
-
-        Returns
-        -------
-        GraphDBNode
-            The created node.
-        """
-        pass
-
-    @abstractmethod
-    def create_relationship(self, start_id, rel_type, end_id, properties=None, bidirectional=False, rel_id=None) -> GraphDBRelationship:
-        """
-        Create a relationship in the graph database.
-
-        Parameters
-        ----------
-        start_id : str
-            The id of the start node.
-        rel_type : str
-            The type of the relationship.
-        end_id : str
-            The id of the end node.
-        properties : dict, optional
-            The properties of the relationship, by default None
-        bidirectional : bool, optional
-            Whether the relationship is bidirectional, by default False
-        rel_id : str, optional
-            The id of the relationship, by default None
-            If None, a random id will be generated.
-
-        Returns
-        -------
-        GraphDBRelationship
-            The created relationship.
-        """
-        pass
-
-    @abstractmethod
-    def match_nodes(self, label=None, **property_filter) -> list[GraphDBNode]:
-        """
-        Match nodes in the graph database.
-
-        Parameters
-        ----------
-        label : str, optional
-            The label of the nodes to match, by default None
-        property_filter : dict
-            The properties to filter the nodes by.
-            A dict with the property name as key and the property value as value.
-            Filters out nodes that don't have the property or have a different value.
-
-        Returns
-        -------
-        list[GraphDBNode]
-            A list of nodes that match the filter.
-        """
-        pass
-
-    @abstractmethod
-    def match_relationships(self, rel_type=None, property_filter=None) -> list[GraphDBRelationship]:
-        """
-        Match relationships in the graph database.
-
-        Parameters
-        ----------
-        rel_type : str, optional
-            The type of the relationships to match, by default None
-        property_filter : dict, optional
-            The properties to filter the relationships by, by default None
-            A dict with the property name as key and the property value as value.
-            Filters out relationships that don't have the property or have a different value.
-
-        Returns
-        -------
-        list[GraphDBRelationship]
-            A list of relationships that match the filter.
-        """
-        pass
-
-    @abstractmethod
-    def get_relationships_for_node(self, node_id, rel_type=None, direction='both') -> list[GraphDBRelationship]:
-        """
-        Get relationships for a node in the graph database.
-
-        Parameters
-        ----------
-        node_id : str
-            The id of the node.
-        rel_type : str, optional
-            The type of the relationships to get, by default None
-        direction : str, optional
-            The direction of the relationships to get, by default 'both'
-            Can be 'both', 'in', or 'out'.
-
-        Returns
-        -------
-        list[GraphDBRelationship]
-            A list of relationships for the node.
-        """
-        pass
-
-    @abstractmethod
-    def update_node(self, node_id, properties):
-        """
-        Update a node in the graph database.
-
-        Parameters
-        ----------
-        node_id : str
-            The id of the node.
-        properties : dict
-            The properties to update.
-        """
-        pass
-
-    @abstractmethod
-    def update_relationship(self, rel_id, properties):
-        """
-        Update a relationship in the graph database.
-
-        Parameters
-        ----------
-        rel_id : str
-            The id of the relationship.
-        properties : dict
-            The properties to update.
-        """
-        pass
-
-    @abstractmethod
-    def delete_node(self, node_id) -> GraphDBNode:
-        """
-        Delete a node from the graph database.
-
-        Parameters
-        ----------
-        node_id : str
-            The id of the node.
-
-        Returns
-        -------
-        GraphDBNode
-            The deleted node.
-        """
-        pass
-
-    @abstractmethod
-    def delete_relationship(self, rel_id) -> GraphDBRelationship:
-        """
-        Delete a relationship from the graph database.
-
-        Parameters
-        ----------
-        rel_id : str
-            The id of the relationship.
-
-        Returns
-        -------
-        GraphDBRelationship
-            The deleted relationship.
         """
         pass
 
