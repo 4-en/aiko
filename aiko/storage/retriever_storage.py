@@ -480,7 +480,7 @@ class GraphMemory(ABC):
         pass
     
 
-    def insert(self, memory: Memory):
+    def add_memory(self, memory: Memory):
         """
         Insert a memory into the graph database.
         
@@ -489,6 +489,39 @@ class GraphMemory(ABC):
         memory : Memory
             The memory to insert.
         """
+        # TODO: implement duplicate and contradiction handling
+        # this could be implemented by grouping memories with the same content together, maybe in a pro and con group
+        # then we could use for example wilson score to rank the groups, ie determine the "truth" and confidence of the group
+        # this could be used to determine the "truth" of the memory
+        # also, we should factor in the trustworthiness of the source of the memory
+        #
+        # 1. Weighted Proportions (Core)
+        #
+        # Simple formula:
+        # pi=∑weights supporting position i∑all weights
+        # pi​=∑all weights∑weights supporting position i​
+        # Gives you basic relative strength of each position.
+        #
+        # 2. Effective Sample Size (ESS)
+        #
+        # Compute ESS:
+        # ESS=(∑wi)2∑wi2
+        # ESS=∑wi2​(∑wi​)2​
+        # Why?
+        # - It reflects how trustworthy your total evidence pool is.
+        # - Prevents overconfidence from a few strong-weighted sources.
+        #
+        # 3. Wilson-like Confidence Approximation
+        #
+        # Per position, apply a simplified Wilson-style interval:
+        # CIi=pi+z22×ESS±z×pi(1−pi)ESS+z24×ESS21+z2ESS
+        # CIi​=1+ESSz2​pi​+2×ESSz2​±z×ESSpi​(1−pi​)​+4×ESS2z2​
+        #
+        # Gives an uncertainty range per position.
+
+
+        # for now, just insert everything as independent memories
+
         pass
     
     def delete(self, memory_id: str) -> bool:
