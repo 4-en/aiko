@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import uuid
 
 from enum import Enum
 import numpy as np
@@ -129,6 +130,7 @@ class TimeRelevance(Enum):
         
 
 import time
+import math
 from aiko.utils.ner import NER
 
 @dataclass
@@ -138,14 +140,17 @@ class Memory:
     This can include personal information about a person or general knowledge.
     """
     memory: str # The memory to store
-    entities: list[str] = field(default_factory=list) # The entities in the memory
+    entities: dict = field(default_factory=dict)
     topic: str = None # The topic of the memory
     time_relevance: TimeRelevance = TimeRelevance.ALWAYS
     truthfulness: float = 1.0 # The estimated truthfulness of the memory, 1.0 is probably completely true, 0.0 is probably completely false
     memory_time_point: float = field(default_factory=time.time) # The time the memory is about (not the time the memory was created)
     source: str = "unknown" # The source of the memory, e.g. a person or a website
     embedding: np.ndarray = None # The embedding of the memory
-    creation_time: float = field(default_factory=time.time)
+    creation_time: float = field(default_factory=time.time) # The time the memory was created
+    last_access: float = field(default_factory=lambda: time()) # The last time this memory was accessed
+    total_access_count: int = 0 # The total number of times this memory was accessed
+    id: str = None # The ID of the memory
 
     # TODO: possible additional fields for future versions:
     # - access frequency / count / last access time
@@ -154,10 +159,54 @@ class Memory:
 
     def __post_init__(self):
         # add entities from memory string using NER
+
+        if isinstance(self.entities, list):
+            self.entities = {entity: 1 for entity in self.entities}
+        elif isinstance(self.entities, dict):
+            pass
+
         entities = NER.get_entities(self.memory)
-        self.entities.extend(entities)
-        self.entities = [entity.lower() for entity in self.entities]
-        self.entities = list(set(self.entities))
+
+        entities = [entity.lower() for entity in entities]
+        for entity in entities:
+            # find occurences of the entity in the memory
+            i = 0
+            occurences = 0
+            while i != -1:
+                i = self.memory.find(entity, i)
+                if i != -1:
+                    occurences += 1
+                    i += 1
+            occurences = max(1, occurences)
+            self.entities[entity] += occurences
+
+        if self.id is None:
+            self.id = uuid.uuid4().hex
+
+    def set_memory(self, memory: str):
+        old_ner = NER.get_entities(self.memory)
+        new_ner = NER.get_entities(memory)
+
+        # remove entities that were in the old memory but not in the new one
+        for entity in old_ner:
+            if entity in self.entities:
+                del self.entities[entity]
+
+        # add entities that are in the new memory
+        for entity in new_ner:
+            i = 0
+            occurences = 0
+            while i != -1:
+                i = memory.find(entity, i)
+                if i != -1:
+                    occurences += 1
+                    i += 1
+            occurences = max(1, occurences)
+            self.entities[entity] += occurences
+
+        self.memory = memory
+        self.embedding = None
+
     
     def to_dict(self) -> dict:
         """
@@ -168,6 +217,14 @@ class Memory:
         dict
             The dictionary representation of the memory, excluding the embedding.
         """
+
+        # convert the numpy array to a list
+        emb_accuracy = 5
+        if self.embedding is not None:
+            embedding = [round(val, emb_accuracy) if emb_accuracy > 0 else val for val in self.embedding]
+        else:
+            embedding = None
+
         return {
             "memory": self.memory,
             "entities": self.entities,
@@ -176,7 +233,11 @@ class Memory:
             "truthfulness": self.truthfulness,
             "memory_age": self.memory_time_point,
             "source": self.source,
-            "creation_time": self.creation_time
+            "creation_time": self.creation_time,
+            "last_access": self.last_access,
+            "total_access_count": self.total_access_count,
+            "embedding": embedding,
+            "id": self.id
         }
         
     @staticmethod
@@ -184,6 +245,11 @@ class Memory:
         """
         Create a memory from a dictionary.
         """
+        if embedding is None:
+            embedding = memory_dict.get("embedding", None)
+            if embedding is not None:
+                embedding = np.array(embedding)
+
         return Memory(
             memory=memory_dict["memory"],
             entities=memory_dict["entities"],
@@ -193,8 +259,61 @@ class Memory:
             memory_time_point=memory_dict["memory_age"],
             source=memory_dict["source"],
             embedding=embedding,
-            creation_time=memory_dict["creation_time"]
+            creation_time=memory_dict["creation_time"],
+            last_access=memory_dict["last_access"],
+            total_access_count=memory_dict["total_access_count"],
+            embedding=embedding,
+            id=memory_dict["id"]
         )
         
 
+    def get_access_score(self, current_time: float=None) -> float:
+
+        # TODO: future improvements:
+        # - keep track of average time between accesses, more spread out should be better when compared to more clustered accesses
+        # - see Ebbinghaus forgetting curve for inspiration https://en.wikipedia.org/wiki/Forgetting_curve
+        # - add importance factor. This could work by simply starting with a higher total_accesses, so that the memory is more important from the start
+        # - use some kind of non-linear scaling for half-time, so that first accesses are more important than later ones
+
+        if current_time is None:
+            current_time = time()
+
+        # calculate the score based on the time since last access and creation
+        # the score should be higher if the memory was accessed recently and lower if it was accessed a long time ago
+        # if the memory was accessed just now, the score should be 1.0
+
+        time_since_access = current_time - self.last_access
+        time_since_creation = current_time - self.creation
+        
+        # TODO: even for 1 access, the half-time is already much longer than 1 hours, so maybe fix this later
+        min_half_time = 60 * 60 # one hour
+        max_half_time = 60 * 60 * 24 * 30 * 12 # one year
+
+        max_total_accesses = 100
+        max_total_per_day = 0.1
+        total_per_day = self.total_accesses / (time_since_creation / (60 * 60 * 24))
+        # total_per_day *= 1000
+        # true_total = min(1.0, (math.log( self.total_accesses + 5) - 1.5) / 3.0) # 0 to 1
+        # true_total_per_day = min(1.0, (math.log( total_per_day + 5) - 1.5) / 3.0) # 0 to 1
+        true_total = min(1.0, self.total_accesses / max_total_accesses)
+        true_total_per_day = min(1.0, total_per_day / max_total_per_day)
+
+        # calculate two half-lives, one for the time since last access and one for the time since creation
+        # use higher half-life, as this allows to have a way to completely learn memories (when total accesses are >= max_total_accesses)
+
+        total_scale = max(0.0, true_total, true_total_per_day)
+
+        best_half_time = min_half_time + (max_half_time - min_half_time) * total_scale
+
+        # apply half time to the time since last access
+        access_score = math.exp(-time_since_access / best_half_time)
+
+        return access_score
+        
+    
+    def on_access(self, current_time: float=None, score: int = 1):
+        if current_time is None:
+            current_time = time()
+        self.total_accesses += score
+        self.last_access = current_time
     

@@ -4,18 +4,33 @@ from abc import ABC, abstractmethod
 import uuid
 import os
 from aiko.core import Memory
-import math
 from time import time
     
 @dataclass
-class TagNode:
+class MemoryTag:
     """
     A tag entry in the graph database, containing the tag name and metadata.
     """
-    id: str
     name: str
     occurences: int = 1
     queries: int = 0
+    creation_time: float = field(default_factory=time)
+    last_access: float = field(default_factory=time)
+
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'occurences': self.occurences,
+            'queries': self.queries,
+            'creation_time': self.creation_time,
+            'last_access': self.last_access
+        }
+    
+    @staticmethod
+    def from_dict(data):
+        return MemoryTag(**data)
     
 @dataclass
 class GraphDBQueryResult:
@@ -30,82 +45,9 @@ class GraphDBQueryResult:
         # TODO: implement positive feedback
         pass
 
-
-@dataclass
-class MemoryNode:
-    """
-    A node in the memory graph, containing the memory and metadata.
-    """
-    memory: Memory
-    creation: float = field(default_factory=lambda: time())
-    last_access: float = field(default_factory=lambda: time())
-    total_accesses: int = 0
-
-    def to_dict(self):
-        return {
-            "memory": self.memory.to_dict(),
-            "creation": self.creation,
-            "last_access": self.last_access,
-            "total_accesses": self.total_accesses,
-        }
-    
-    @staticmethod
-    def from_dict(data):
-        memory = Memory.from_dict(data["memory"])
-        creation = data["creation"]
-        last_access = data["last_access"]
-        total_access = data["total_accesses"]
-        return MemoryNode(memory, creation, last_access, total_access)
-    
-    def get_access_score(self, current_time: float=None) -> float:
-
-        # TODO: future improvements:
-        # - keep track of average time between accesses, more spread out should be better when compared to more clustered accesses
-        # - see Ebbinghaus forgetting curve for inspiration https://en.wikipedia.org/wiki/Forgetting_curve
-        # - add importance factor. This could work by simply starting with a higher total_accesses, so that the memory is more important from the start
-        # - use some kind of non-linear scaling for half-time, so that first accesses are more important than later ones
-
-        if current_time is None:
-            current_time = time()
-
-        # calculate the score based on the time since last access and creation
-        # the score should be higher if the memory was accessed recently and lower if it was accessed a long time ago
-        # if the memory was accessed just now, the score should be 1.0
-
-        time_since_access = current_time - self.last_access
-        time_since_creation = current_time - self.creation
-        
-        # TODO: even for 1 access, the half-time is already much longer than 1 hours, so maybe fix this later
-        min_half_time = 60 * 60 # one hour
-        max_half_time = 60 * 60 * 24 * 30 * 12 # one year
-
-        max_total_accesses = 100
-        max_total_per_day = 0.1
-        total_per_day = self.total_accesses / (time_since_creation / (60 * 60 * 24))
-        # total_per_day *= 1000
-        # true_total = min(1.0, (math.log( self.total_accesses + 5) - 1.5) / 3.0) # 0 to 1
-        # true_total_per_day = min(1.0, (math.log( total_per_day + 5) - 1.5) / 3.0) # 0 to 1
-        true_total = min(1.0, self.total_accesses / max_total_accesses)
-        true_total_per_day = min(1.0, total_per_day / max_total_per_day)
-
-        # calculate two half-lives, one for the time since last access and one for the time since creation
-        # use higher half-life, as this allows to have a way to completely learn memories (when total accesses are >= max_total_accesses)
-
-        total_scale = max(0.0, true_total, true_total_per_day)
-
-        best_half_time = min_half_time + (max_half_time - min_half_time) * total_scale
-
-        # apply half time to the time since last access
-        access_score = math.exp(-time_since_access / best_half_time)
-
-        return access_score
-        
-    
-    def on_access(self, current_time: float=None, score: int = 1):
-        if current_time is None:
-            current_time = time()
-        self.total_accesses += score
-        self.last_access = current_time
+    def negative_feedback(self, query: str):
+        # TODO: implement negative feedback
+        pass
 
 
 @dataclass
@@ -382,7 +324,7 @@ class GraphMemory(ABC):
         """
         pass
     
-    def calculate_tag_score(self, tags: list[TagNode], query_tags: list[str]) -> float:
+    def calculate_tag_score(self, tags: list[MemoryTag], query_tags: list[str]) -> float:
         """
         Calculate the score of a document based on its tags and the query tags.
         
@@ -556,7 +498,7 @@ class GraphMemory(ABC):
         """
         pass
     
-    def get_tag_entries(self, tags: list[str]) -> list[TagNode|None]:
+    def get_tag_entries(self, tags: list[str]) -> list[MemoryTag|None]:
         """
         Get the tag entries for the given tags.
         
@@ -806,7 +748,7 @@ class KnowledgeBase:
         str
             A random key.
         """
-        return str(uuid.uuid4())
+        return uuid.uuid4().hex
         
     def insert(self, value: dict, vector: np.ndarray, key: str = None):
         """
